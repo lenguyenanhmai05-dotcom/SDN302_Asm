@@ -11,10 +11,10 @@ export default function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-[rgba(173,48,41,0.08)] bg-[#FAF7F2]/85 backdrop-blur-md transition-all">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between px-6 sm:px-10 lg:px-12">
           {/* Logo & Brand: OrPit */}
           <Link href="/" className="group flex items-center gap-3">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#AD3029] via-[#CD5252] to-[#CC8780] shadow-md shadow-[#AD3029]/20 transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-[#AD3029]/30">
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-[#AD3029] via-[#CD5252] to-[#CC8780] shadow-md shadow-[#AD3029]/20 transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-[#AD3029]/30">
               {/* OrPit Orbital Planetary Icon */}
               <svg
                 viewBox="0 0 24 24"
@@ -30,17 +30,17 @@ export default function Navbar() {
               </svg>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold tracking-tight text-[#221514]">
+              <span className="text-2xl font-bold tracking-tight text-[#221514]">
                 OrPit
               </span>
             </div>
           </Link>
 
           {/* Clean Navigation */}
-          <nav className="flex items-center gap-2 sm:gap-3">
+          <nav className="flex items-center gap-2.5 sm:gap-4">
             <Link
               href="/"
-              className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all ${
+              className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
                 pathname === "/"
                   ? "bg-[#AD3029] text-white shadow-xs"
                   : "text-[#55403E] hover:bg-[rgba(173,48,41,0.06)] hover:text-[#AD3029]"
@@ -51,23 +51,23 @@ export default function Navbar() {
 
             <Link
               href="/teams"
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all ${
+              className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
                 pathname === "/teams"
                   ? "bg-[#AD3029] text-white shadow-xs"
                   : "text-[#55403E] hover:bg-[rgba(173,48,41,0.06)] hover:text-[#AD3029]"
               }`}
             >
               <span>Teams</span>
-              <span className="rounded-full bg-[#FEEFCD] px-1.5 py-0.2 text-[10px] font-semibold text-[#8F2520]">
+              <span className="rounded-full bg-[#FEEFCD] px-1.5 py-0.2 text-[10px] font-bold text-[#8F2520]">
                 v2
               </span>
             </Link>
 
-            <div className="mx-1 h-4 w-px bg-[rgba(173,48,41,0.15)]" />
+            <div className="mx-1 h-5 w-px bg-[rgba(173,48,41,0.15)]" />
 
             <button
               onClick={() => setShowLoginModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(173,48,41,0.2)] bg-white px-3.5 py-1.5 text-sm font-medium text-[#AD3029] shadow-2xs transition-all hover:bg-[#FEEFCD]/40 hover:border-[#AD3029] cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(173,48,41,0.2)] bg-white px-4 py-2 text-sm font-semibold text-[#AD3029] shadow-2xs transition-all hover:bg-[#FEEFCD]/40 hover:border-[#AD3029] cursor-pointer"
             >
               <span>Sign In</span>
             </button>

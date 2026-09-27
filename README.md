@@ -1,33 +1,34 @@
-# TaskTeam – Task & Team Management Application
+# OrPit – Workspace & Task Management Application
 > **Course:** SDN302 – Software Development with Node.js & Cloud Database  
 > **Assignment 1:** Project Setup, Prisma & Deployment  
-> **Author / Student:** Le Nguyen Anh Mai  
+> **Student:** Le Nguyen Anh Mai  
 > **Repository:** [https://github.com/lenguyenanhmai05-dotcom/SDN302_Asm](https://github.com/lenguyenanhmai05-dotcom/SDN302_Asm)  
 
 ---
 
 ## 📖 1. Project Overview
 
-TaskTeam is a modern, responsive web application for managing tasks and team projects. This project establishes the complete technical foundation for the course, including:
+**OrPit** is a minimalist, high-performance task management workspace built for individuals and teams. This project establishes the complete technical foundation for the course:
 - **Next.js 16 (App Router, TypeScript)** for fullstack React application and RESTful Route Handlers.
 - **Prisma ORM** for type-safe database queries, schema migrations, and client generation.
 - **Cloud PostgreSQL on Supabase** with transaction and session connection poolers.
-- **Public Task CRUD Interface**: Anyone can view, create, update, and delete tasks directly from the homepage without authentication (authentication and team management will be introduced in Assignment 2).
-- **Tailwind CSS Design System** tailored with an elegant **Jade Green** color palette.
+- **Public Task CRUD Interface**: Anyone can view, create, update, and delete tasks directly from the homepage without authentication (authentication and team spaces will be introduced in Assignment 2).
+- **Red Velvet & Warm Cream Design System**: Clean, modern, distraction-free aesthetic with high contrast and smooth micro-interactions.
 - **Automated CI/CD**: GitHub Actions workflow for linting and building on every push.
 
 ---
 
-## 🎨 2. Design System & Jade Color Palette
+## 🎨 2. Design System & Red Velvet Color Palette
 
-The interface is custom-styled with a soothing, nature-inspired **Jade & Sea Glass** color scheme:
+The interface is custom-styled with a soothing, luxury **Red Velvet Cake & Warm Cream** palette:
 
 | Color Token | Hex Code | Visual Reference | Usage |
 |:---|:---:|:---:|:---|
-| **Jade Light** | `#AEDBB8` | ![#AEDBB8](https://via.placeholder.com/15/AEDBB8/000000?text=+) | Subtle badges, borders, card hover highlights |
-| **Jade Mint** | `#8FCA97` | ![#8FCA97](https://via.placeholder.com/15/8FCA97/000000?text=+) | Secondary gradients, active borders, status accents |
-| **Jade Green** | `#68A877` | ![#68A877](https://via.placeholder.com/15/68A877/000000?text=+) | Subheadings, icons, secondary interactive buttons |
-| **Jade Forest** | `#45834D` | ![#45834D](https://via.placeholder.com/15/45834D/000000?text=+) | Primary brand color, CTA buttons, active tabs |
+| **Velvet Red** | `#AD3029` | ![#AD3029](https://via.placeholder.com/15/AD3029/000000?text=+) | Primary brand color, CTA buttons, active tabs, form border |
+| **Coral Berry** | `#CD5252` | ![#CD5252](https://via.placeholder.com/15/CD5252/000000?text=+) | High priority badges, hover states, secondary highlights |
+| **Dusty Rose** | `#CC8780` | ![#CC8780](https://via.placeholder.com/15/CC8780/000000?text=+) | Medium priority badges, subtle border accents |
+| **Vanilla Cream** | `#FEEFCD` | ![#FEEFCD](https://via.placeholder.com/15/FEEFCD/000000?text=+) | Stat chips, active pill backgrounds, soft container highlights |
+| **Warm Ivory** | `#FAF7F2` | ![#FAF7F2](https://via.placeholder.com/15/FAF7F2/000000?text=+) | Page background, calm reading canvas |
 
 ---
 
@@ -111,8 +112,8 @@ All API endpoints are implemented with Next.js App Router Route Handlers and bac
 - [x] **Prisma & Supabase**: Successfully migrated 4 core tables and seeded sample tasks.
 - [x] **Singleton Prisma Client**: Implemented in [`lib/prisma.ts`](./lib/prisma.ts).
 - [x] **Task CRUD**: Public end-to-end Create, Read, Update, Delete with realtime UI updates without page reloads.
-- [x] **Responsive Layout**: Shared Navbar & Footer with mobile navigation drawer.
-- [x] **Teams Placeholder**: Beautiful "Coming Soon" page at `/teams`.
+- [x] **Responsive Layout**: Shared Navbar & Footer with full-width screen responsiveness.
+- [x] **Teams Placeholder**: Minimalist "Coming Soon" page at `/teams`.
 - [x] **Bonus – Client-side Validation**: Required title with friendly error cues.
 - [x] **Bonus – Status Filter & Search**: Interactive filtering by status (All, To Do, In Progress, Done) and priority.
 - [x] **Bonus – CI Workflow**: GitHub Actions workflow at [`.github/workflows/ci.yml`](./.github/workflows/ci.yml).

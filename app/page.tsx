@@ -240,57 +240,57 @@ export default function HomePage() {
   }, [tasks]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full max-w-[1600px] px-6 pt-4 pb-10 sm:px-10 lg:px-12">
       {/* Toast Notification */}
       {toastMessage && (
         <div
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-xl px-4 py-3 text-xs font-semibold shadow-xl transition-all border animate-in slide-in-from-bottom-5 ${
+          className={`fixed bottom-8 right-8 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 text-sm font-semibold shadow-2xl transition-all border animate-in slide-in-from-bottom-5 ${
             toastMessage.type === "success"
               ? "bg-[#221514] text-[#FEEFCD] border-[#AD3029]"
               : "bg-rose-900 text-white border-rose-700"
           }`}
         >
-          <span>{toastMessage.type === "success" ? "✓" : "⚠️"}</span>
+          <span className="text-base">{toastMessage.type === "success" ? "✓" : "⚠️"}</span>
           <span>{toastMessage.text}</span>
         </div>
       )}
 
-      {/* Minimalist Header & Stats */}
-      <section className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-[rgba(173,48,41,0.08)] pb-6">
+      {/* Clean Unframed Header with Minimal Vertical Spacing */}
+      <section className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#221514] sm:text-3xl">
+          <h1 className="text-2xl font-extrabold tracking-tight text-[#221514] sm:text-3xl">
             Workspace Tasks
           </h1>
-          <p className="mt-1 text-xs text-[#7A6664]">
-            Organize, prioritize, and track your team work effortlessly.
+          <p className="mt-0.5 text-xs text-[#7A6664]">
+            Organize, prioritize, and track your team work effortlessly in real time.
           </p>
         </div>
 
         {/* Minimal Stat Chips */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1.5 rounded-xl border border-[rgba(173,48,41,0.12)] bg-white px-3 py-1.5 shadow-2xs">
-            <span className="text-[11px] font-medium text-[#7A6664]">All</span>
+            <span className="text-xs font-semibold text-[#7A6664]">All</span>
             <span className="rounded-md bg-[#FAF7F2] px-1.5 py-0.5 text-xs font-bold text-[#221514]">
               {stats.total}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5 rounded-xl border border-[rgba(173,48,41,0.12)] bg-white px-3 py-1.5 shadow-2xs">
-            <span className="text-[11px] font-medium text-[#7A6664]">To Do</span>
+            <span className="text-xs font-semibold text-[#7A6664]">To Do</span>
             <span className="rounded-md bg-[#FEEFCD] px-1.5 py-0.5 text-xs font-bold text-[#8F2520]">
               {stats.todo}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5 rounded-xl border border-[rgba(173,48,41,0.12)] bg-white px-3 py-1.5 shadow-2xs">
-            <span className="text-[11px] font-medium text-[#7A6664]">In Progress</span>
+            <span className="text-xs font-semibold text-[#CD5252]">In Progress</span>
             <span className="rounded-md bg-[#FEEFCD] px-1.5 py-0.5 text-xs font-bold text-[#CD5252]">
               {stats.inProgress}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5 rounded-xl border border-[rgba(173,48,41,0.12)] bg-white px-3 py-1.5 shadow-2xs">
-            <span className="text-[11px] font-medium text-[#7A6664]">Done</span>
+            <span className="text-xs font-semibold text-[#AD3029]">Done</span>
             <span className="rounded-md bg-[#AD3029] px-1.5 py-0.5 text-xs font-bold text-[#FEEFCD]">
               {stats.done}
             </span>
@@ -298,62 +298,79 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Main Grid: Form (Left) & Tasks List (Right) */}
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left Column: Create Task Form (4 cols) */}
-        <div className="lg:col-span-4">
-          <div className="sticky top-24 rounded-2xl border border-[rgba(173,48,41,0.12)] bg-white p-5 shadow-sm">
+      {/* Main Grid: Form (With Red Border on Left) & Tasks List (Right) */}
+      <div className="grid gap-6 lg:grid-cols-12 items-start">
+        {/* Left Column: Enlarged "New Task" Form with Prominent Red Border */}
+        <div className="lg:col-span-5 xl:col-span-5">
+          <div className="sticky top-20 rounded-3xl border-2 border-[#AD3029] bg-white p-6 sm:p-7 shadow-xl shadow-[#AD3029]/8 transition-all">
+            {/* Form Header with Red Accent */}
             <div className="pb-3 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-sm font-bold text-[#221514]">New Task</h2>
-              <span className="text-[10px] font-semibold text-[#AD3029] bg-[#FEEFCD] px-2 py-0.5 rounded-full">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#AD3029] text-white shadow-xs">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-[#221514]">Create New Task</h2>
+                </div>
+              </div>
+              <span className="text-[11px] font-bold text-[#AD3029] bg-[#FEEFCD] px-2.5 py-0.5 rounded-full border border-[rgba(173,48,41,0.15)]">
                 Quick Add
               </span>
             </div>
 
-            <form onSubmit={handleCreateTask} className="mt-4 space-y-3.5">
+            <form onSubmit={handleCreateTask} className="mt-5 space-y-4">
               {/* Title */}
               <div>
-                <label className="block text-[11px] font-semibold text-[#55403E] uppercase tracking-wider mb-1">
-                  Title <span className="text-[#AD3029]">*</span>
+                <label className="block text-xs font-bold text-[#55403E] uppercase tracking-wider mb-1.5">
+                  Task Title <span className="text-[#AD3029]">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="Task title..."
+                  placeholder="e.g. Design Dashboard Components..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className={`w-full rounded-xl border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2 ${
+                  className={`w-full rounded-xl border px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${
                     formError
                       ? "border-rose-400 focus:ring-rose-200"
                       : "border-gray-200 focus:border-[#AD3029] focus:ring-[#FEEFCD]"
                   }`}
                 />
-                {formError && <p className="mt-1 text-[11px] text-rose-500">{formError}</p>}
+                {formError && <p className="mt-1 text-xs text-rose-500">{formError}</p>}
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-[11px] font-semibold text-[#55403E] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-[#55403E] uppercase tracking-wider mb-1.5">
                   Description
                 </label>
                 <textarea
-                  rows={2}
-                  placeholder="Optional details or context..."
+                  rows={3}
+                  placeholder="Add details, notes, or requirements..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs transition-all focus:border-[#AD3029] focus:outline-none focus:ring-2 focus:ring-[#FEEFCD]"
+                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm transition-all focus:border-[#AD3029] focus:outline-none focus:ring-2 focus:ring-[#FEEFCD]"
                 />
               </div>
 
               {/* Status & Priority */}
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#55403E] uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-[#55403E] uppercase tracking-wider mb-1.5">
                     Status
                   </label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-[#221514] focus:border-[#AD3029] focus:outline-none"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-[#221514] focus:border-[#AD3029] focus:outline-none"
                   >
                     <option value="TO_DO">To Do</option>
                     <option value="IN_PROGRESS">In Progress</option>
@@ -362,13 +379,13 @@ export default function HomePage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#55403E] uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-[#55403E] uppercase tracking-wider mb-1.5">
                     Priority
                   </label>
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-[#221514] focus:border-[#AD3029] focus:outline-none"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-[#221514] focus:border-[#AD3029] focus:outline-none"
                   >
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
@@ -379,14 +396,14 @@ export default function HomePage() {
 
               {/* Due Date */}
               <div>
-                <label className="block text-[11px] font-semibold text-[#55403E] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-[#55403E] uppercase tracking-wider mb-1.5">
                   Due Date
                 </label>
                 <input
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-[#221514] focus:border-[#AD3029] focus:outline-none"
+                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm text-[#221514] focus:border-[#AD3029] focus:outline-none"
                 />
               </div>
 
@@ -394,27 +411,27 @@ export default function HomePage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#AD3029] py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-[#8F2520] hover:shadow-md disabled:opacity-50 cursor-pointer"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#AD3029] py-3 text-sm font-bold text-white shadow-md shadow-[#AD3029]/20 transition-all hover:bg-[#8F2520] hover:shadow-lg disabled:opacity-50 cursor-pointer"
               >
                 {submitting ? (
-                  <span>Saving...</span>
+                  <span>Saving Task...</span>
                 ) : (
-                  <span>Create Task</span>
+                  <span>+ Create Task</span>
                 )}
               </button>
             </form>
           </div>
         </div>
 
-        {/* Right Column: Controls & Task List (8 cols) */}
-        <div className="lg:col-span-8 space-y-4">
+        {/* Right Column: Controls & Task List (7 cols out of 12) */}
+        <div className="lg:col-span-7 xl:col-span-7 space-y-4">
           {/* Controls Bar */}
-          <div className="rounded-2xl border border-[rgba(173,48,41,0.12)] bg-white p-3.5 shadow-2xs space-y-3">
+          <div className="rounded-2xl border border-[rgba(173,48,41,0.12)] bg-white p-4 shadow-xs space-y-3">
             <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
               {/* Search */}
               <div className="relative flex-1">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -425,15 +442,15 @@ export default function HomePage() {
                 </span>
                 <input
                   type="text"
-                  placeholder="Search tasks..."
+                  placeholder="Search tasks by title or description..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 pl-8 pr-3 py-1.5 text-xs transition-all focus:border-[#AD3029] focus:outline-none"
+                  className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-2 text-sm transition-all focus:border-[#AD3029] focus:outline-none"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-[11px] text-gray-400 hover:text-gray-600"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-xs text-gray-400 hover:text-gray-600"
                   >
                     Clear
                   </button>
@@ -441,16 +458,16 @@ export default function HomePage() {
               </div>
 
               {/* Priority Filter */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-medium text-[#7A6664] whitespace-nowrap">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-[#7A6664] whitespace-nowrap">
                   Priority:
                 </span>
                 <select
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="rounded-xl border border-gray-200 bg-white px-2.5 py-1 text-xs text-[#221514] focus:border-[#AD3029] focus:outline-none"
+                  className="rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-[#221514] focus:border-[#AD3029] focus:outline-none"
                 >
-                  <option value="ALL">All</option>
+                  <option value="ALL">All Priorities</option>
                   <option value="HIGH">High</option>
                   <option value="MEDIUM">Medium</option>
                   <option value="LOW">Low</option>
@@ -469,17 +486,17 @@ export default function HomePage() {
                 <button
                   key={tab.value}
                   onClick={() => setStatusFilter(tab.value)}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer ${
+                  className={`rounded-lg px-3 py-1 text-xs font-bold transition-all cursor-pointer ${
                     statusFilter === tab.value
-                      ? "bg-[#AD3029] text-white shadow-2xs"
+                      ? "bg-[#AD3029] text-white shadow-xs"
                       : "bg-[#FAF7F2] text-[#55403E] hover:bg-[#FEEFCD] hover:text-[#8F2520]"
                   }`}
                 >
                   {tab.label}
                 </button>
               ))}
-              <span className="ml-auto text-[11px] text-[#7A6664]">
-                {filteredTasks.length} {filteredTasks.length === 1 ? "task" : "tasks"}
+              <span className="ml-auto text-xs text-[#7A6664]">
+                Showing {filteredTasks.length} / {tasks.length} tasks
               </span>
             </div>
           </div>
@@ -498,18 +515,18 @@ export default function HomePage() {
                 />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
-              <p className="mt-2 text-xs text-[#7A6664]">Loading workspace...</p>
+              <p className="mt-2 text-xs text-[#7A6664]">Loading workspace tasks...</p>
             </div>
           ) : filteredTasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[rgba(173,48,41,0.15)] bg-white/60 p-10 text-center">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FEEFCD] text-[#AD3029] mb-2 font-bold">
                 ✓
               </div>
-              <h3 className="text-sm font-semibold text-[#221514]">No tasks found</h3>
+              <h3 className="text-sm font-bold text-[#221514]">No tasks found</h3>
               <p className="mt-0.5 text-xs text-[#7A6664]">
                 {searchQuery || statusFilter !== "ALL" || priorityFilter !== "ALL"
-                  ? "Try adjusting your search or filters."
-                  : "All clear! Add a task using the form on the left."}
+                  ? "Try adjusting your search query or filters."
+                  : "All clear! Create your first task using the form on the left."}
               </p>
             </div>
           ) : (
@@ -519,15 +536,15 @@ export default function HomePage() {
                 return (
                   <div
                     key={task.id}
-                    className={`group relative rounded-xl border bg-white p-4 transition-all hover:shadow-xs ${
+                    className={`group relative rounded-xl border bg-white p-4 sm:p-5 transition-all hover:shadow-xs ${
                       isDone
                         ? "border-gray-200/80 bg-[#FCFBF9]"
                         : "border-[rgba(173,48,41,0.12)] hover:border-[#CD5252]"
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start justify-between gap-3.5">
                       {/* Checkbox & Text */}
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="flex items-start gap-3.5 flex-1 min-w-0">
                         <button
                           type="button"
                           onClick={() => handleQuickToggleDone(task)}
@@ -544,7 +561,7 @@ export default function HomePage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
                             <h3
-                              className={`text-sm font-semibold text-[#221514] truncate ${
+                              className={`text-sm sm:text-base font-bold text-[#221514] truncate ${
                                 isDone ? "line-through text-gray-400" : ""
                               }`}
                             >
@@ -566,7 +583,7 @@ export default function HomePage() {
 
                             {/* Priority Badge */}
                             <span
-                              className={`rounded-md px-1.5 py-0.5 text-[9px] font-semibold ${
+                              className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold ${
                                 task.priority === "HIGH"
                                   ? "bg-[#CD5252] text-white"
                                   : task.priority === "MEDIUM"
@@ -580,7 +597,7 @@ export default function HomePage() {
 
                           {task.description && (
                             <p
-                              className={`text-xs leading-relaxed line-clamp-2 ${
+                              className={`text-xs leading-relaxed ${
                                 isDone ? "text-gray-400" : "text-[#55403E]"
                               }`}
                             >
@@ -589,10 +606,10 @@ export default function HomePage() {
                           )}
 
                           {/* Date details */}
-                          <div className="mt-2 flex flex-wrap items-center gap-3 text-[10px] text-[#7A6664]">
+                          <div className="mt-2.5 flex flex-wrap items-center gap-3 text-[11px] text-[#7A6664]">
                             {task.dueDate && (
-                              <span className="flex items-center gap-1 font-medium text-[#8F2520]">
-                                Due {new Date(task.dueDate).toLocaleDateString()}
+                              <span className="flex items-center gap-1 font-semibold text-[#8F2520]">
+                                📅 Due {new Date(task.dueDate).toLocaleDateString()}
                               </span>
                             )}
                             <span>Created {new Date(task.createdAt).toLocaleDateString()}</span>
@@ -607,7 +624,7 @@ export default function HomePage() {
                           className="rounded-lg p-1.5 text-gray-400 hover:bg-[#FAF7F2] hover:text-[#AD3029] transition-colors cursor-pointer"
                           title="Edit task"
                         >
-                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -622,7 +639,7 @@ export default function HomePage() {
                           className="rounded-lg p-1.5 text-gray-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
                           title="Delete task"
                         >
-                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -644,9 +661,9 @@ export default function HomePage() {
       {/* Edit Modal */}
       {editingTask && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl border border-[rgba(173,48,41,0.15)] animate-in fade-in zoom-in-95 duration-150">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl border border-[rgba(173,48,41,0.15)] animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <h3 className="text-sm font-bold text-[#221514]">Edit Task</h3>
+              <h3 className="text-base font-bold text-[#221514]">Edit Task</h3>
               <button
                 onClick={() => setEditingTask(null)}
                 className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
@@ -655,45 +672,45 @@ export default function HomePage() {
               </button>
             </div>
 
-            <form onSubmit={handleUpdateTask} className="mt-4 space-y-3">
+            <form onSubmit={handleUpdateTask} className="mt-4 space-y-3.5">
               <div>
-                <label className="block text-[11px] font-semibold text-[#55403E] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-[#55403E] uppercase tracking-wider mb-1.5">
                   Title <span className="text-[#AD3029]">*</span>
                 </label>
                 <input
                   type="text"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  className={`w-full rounded-xl border px-3 py-2 text-xs transition-all focus:outline-none focus:ring-2 ${
+                  className={`w-full rounded-xl border px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${
                     editError
                       ? "border-rose-400 focus:ring-rose-200"
                       : "border-gray-200 focus:border-[#AD3029] focus:ring-[#FEEFCD]"
                   }`}
                 />
-                {editError && <p className="mt-1 text-[11px] text-rose-500">{editError}</p>}
+                {editError && <p className="mt-1 text-xs text-rose-500">{editError}</p>}
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#55403E] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-[#55403E] uppercase tracking-wider mb-1.5">
                   Description
                 </label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs transition-all focus:border-[#AD3029] focus:outline-none focus:ring-2 focus:ring-[#FEEFCD]"
+                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm transition-all focus:border-[#AD3029] focus:outline-none focus:ring-2 focus:ring-[#FEEFCD]"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#55403E] uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-[#55403E] uppercase tracking-wider mb-1.5">
                     Status
                   </label>
                   <select
                     value={editStatus}
                     onChange={(e) => setEditStatus(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-[#221514] focus:border-[#AD3029] focus:outline-none"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-[#221514] focus:border-[#AD3029] focus:outline-none"
                   >
                     <option value="TO_DO">To Do</option>
                     <option value="IN_PROGRESS">In Progress</option>
@@ -702,13 +719,13 @@ export default function HomePage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#55403E] uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-[#55403E] uppercase tracking-wider mb-1.5">
                     Priority
                   </label>
                   <select
                     value={editPriority}
                     onChange={(e) => setEditPriority(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-[#221514] focus:border-[#AD3029] focus:outline-none"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-[#221514] focus:border-[#AD3029] focus:outline-none"
                   >
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
@@ -718,29 +735,29 @@ export default function HomePage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#55403E] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-[#55403E] uppercase tracking-wider mb-1.5">
                   Due Date
                 </label>
                 <input
                   type="date"
                   value={editDueDate}
                   onChange={(e) => setEditDueDate(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-[#221514] focus:border-[#AD3029] focus:outline-none"
+                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm text-[#221514] focus:border-[#AD3029] focus:outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => setEditingTask(null)}
-                  className="rounded-xl border border-gray-200 px-3.5 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+                  className="rounded-xl border border-gray-200 px-3.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-xl bg-[#AD3029] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F2520] transition-all disabled:opacity-50 cursor-pointer"
+                  className="rounded-xl bg-[#AD3029] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#8F2520] transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {submitting ? "Saving..." : "Save Changes"}
                 </button>
@@ -753,9 +770,9 @@ export default function HomePage() {
       {/* Delete Modal */}
       {taskToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl border border-rose-100 animate-in fade-in zoom-in-95 duration-150">
-            <h3 className="text-sm font-bold text-[#221514]">Delete Task?</h3>
-            <p className="mt-1 text-xs text-[#7A6664]">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl border border-rose-100 animate-in fade-in zoom-in-95 duration-150">
+            <h3 className="text-base font-bold text-[#221514]">Delete Task?</h3>
+            <p className="mt-1.5 text-xs text-[#7A6664]">
               Are you sure you want to permanently delete &quot;
               <span className="font-semibold text-[#221514]">{taskToDelete.title}</span>&quot;?
             </p>
@@ -763,7 +780,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setTaskToDelete(null)}
-                className="rounded-xl border border-gray-200 px-3.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 cursor-pointer"
+                className="rounded-xl border border-gray-200 px-3.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
               >
                 Cancel
               </button>
@@ -771,7 +788,7 @@ export default function HomePage() {
                 type="button"
                 disabled={submitting}
                 onClick={handleDeleteTask}
-                className="rounded-xl bg-rose-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition-all disabled:opacity-50 cursor-pointer"
+                className="rounded-xl bg-rose-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-rose-700 transition-all disabled:opacity-50 cursor-pointer"
               >
                 {submitting ? "Deleting..." : "Delete"}
               </button>
