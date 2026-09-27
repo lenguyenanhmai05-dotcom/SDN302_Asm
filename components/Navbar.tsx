@@ -6,211 +6,116 @@ import { useState } from "react";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-jade-border bg-white/80 backdrop-blur-md transition-all">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo & Brand */}
+      <header className="sticky top-0 z-40 border-b border-[rgba(173,48,41,0.08)] bg-[#FAF7F2]/85 backdrop-blur-md transition-all">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+          {/* Logo & Brand: OrPit */}
           <Link href="/" className="group flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#8FCA97] to-[#45834D] text-white shadow-md shadow-[#45834D]/20 transition-transform group-hover:scale-105">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#AD3029] via-[#CD5252] to-[#CC8780] shadow-md shadow-[#AD3029]/20 transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-[#AD3029]/30">
+              {/* OrPit Orbital Planetary Icon */}
               <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
                 viewBox="0 0 24 24"
+                className="h-5 w-5 text-white"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2.5"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <path d="M12 2v20" />
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                <circle cx="12" cy="12" r="3.5" fill="#FEEFCD" stroke="none" />
+                <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-30 12 12)" stroke="#FFFFFF" strokeWidth="1.8" />
               </svg>
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xl font-bold tracking-tight text-[#142217]">TaskTeam</span>
-                <span className="rounded-md bg-[#AEDBB8]/40 px-1.5 py-0.5 text-xs font-semibold text-[#45834D]">
-                  SDN302
-                </span>
-              </div>
-              <p className="text-[11px] text-[#68A877]">Workspace Management</p>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold tracking-tight text-[#221514]">
+                OrPit
+              </span>
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden items-center gap-1 sm:flex md:gap-2">
+          {/* Clean Navigation */}
+          <nav className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/"
-              className={`rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+              className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all ${
                 pathname === "/"
-                  ? "bg-[#AEDBB8]/30 font-semibold text-[#45834D]"
-                  : "text-neutral-600 hover:bg-[#f2f8f4] hover:text-[#45834D]"
+                  ? "bg-[#AD3029] text-white shadow-xs"
+                  : "text-[#55403E] hover:bg-[rgba(173,48,41,0.06)] hover:text-[#AD3029]"
               }`}
             >
-              Home
+              Tasks
             </Link>
 
             <Link
               href="/teams"
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all ${
                 pathname === "/teams"
-                  ? "bg-[#AEDBB8]/30 font-semibold text-[#45834D]"
-                  : "text-neutral-600 hover:bg-[#f2f8f4] hover:text-[#45834D]"
+                  ? "bg-[#AD3029] text-white shadow-xs"
+                  : "text-[#55403E] hover:bg-[rgba(173,48,41,0.06)] hover:text-[#AD3029]"
               }`}
             >
               <span>Teams</span>
-              <span className="rounded-full bg-[#68A877]/15 px-2 py-0.5 text-[10px] font-semibold text-[#45834D]">
-                Soon
+              <span className="rounded-full bg-[#FEEFCD] px-1.5 py-0.2 text-[10px] font-semibold text-[#8F2520]">
+                v2
               </span>
             </Link>
+
+            <div className="mx-1 h-4 w-px bg-[rgba(173,48,41,0.15)]" />
 
             <button
               onClick={() => setShowLoginModal(true)}
-              className="ml-2 inline-flex items-center gap-1.5 rounded-lg border border-jade-border bg-white px-3.5 py-2 text-sm font-medium text-[#45834D] shadow-xs transition-all hover:bg-[#f2f8f4] hover:border-[#68A877]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[rgba(173,48,41,0.2)] bg-white px-3.5 py-1.5 text-sm font-medium text-[#AD3029] shadow-2xs transition-all hover:bg-[#FEEFCD]/40 hover:border-[#AD3029] cursor-pointer"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                />
-              </svg>
-              <span>Login</span>
+              <span>Sign In</span>
             </button>
-
-            {/* Supabase status badge */}
-            <div className="ml-2 flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800 border border-emerald-200">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Supabase Live</span>
-            </div>
           </nav>
-
-          {/* Mobile Menu Button */}
-          <div className="flex sm:hidden">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="rounded-lg p-2 text-neutral-600 hover:bg-[#f2f8f4] hover:text-[#45834D]"
-              aria-label="Toggle menu"
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                {mobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
         </div>
-
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div className="border-t border-jade-border bg-white px-4 py-4 sm:hidden space-y-2">
-            <Link
-              href="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`block rounded-lg px-3 py-2 text-base font-medium ${
-                pathname === "/"
-                  ? "bg-[#AEDBB8]/30 font-semibold text-[#45834D]"
-                  : "text-neutral-700 hover:bg-[#f2f8f4]"
-              }`}
-            >
-              Home
-            </Link>
-            <Link
-              href="/teams"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between rounded-lg px-3 py-2 text-base font-medium ${
-                pathname === "/teams"
-                  ? "bg-[#AEDBB8]/30 font-semibold text-[#45834D]"
-                  : "text-neutral-700 hover:bg-[#f2f8f4]"
-              }`}
-            >
-              <span>Teams</span>
-              <span className="rounded-full bg-[#68A877]/15 px-2 py-0.5 text-xs font-semibold text-[#45834D]">
-                Assignment 2
-              </span>
-            </Link>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setShowLoginModal(true);
-              }}
-              className="w-full text-left rounded-lg px-3 py-2 text-base font-medium text-[#45834D] hover:bg-[#f2f8f4]"
-            >
-              Login (Assignment 2)
-            </button>
-            <div className="pt-2">
-              <div className="flex items-center gap-2 rounded-lg bg-emerald-50 p-2 text-xs font-medium text-emerald-800">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span>Supabase PostgreSQL Connected</span>
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Login Placeholder Modal */}
       {showLoginModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-jade-border animate-in fade-in zoom-in-95 duration-150">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-[rgba(173,48,41,0.15)] animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-[#AEDBB8]/30 p-2 text-[#45834D]">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FEEFCD] text-[#AD3029]">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-neutral-800">Authentication</h3>
+                <h3 className="text-base font-bold text-[#221514]">Sign In</h3>
               </div>
               <button
                 onClick={() => setShowLoginModal(false)}
-                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
               >
                 ✕
               </button>
             </div>
-            <div className="py-4 space-y-3">
-              <p className="text-sm text-neutral-600">
-                Chào mừng bạn! Tính năng Đăng nhập & Xác thực người dùng (Authentication) sẽ được
-                xây dựng trong **Assignment 2**.
+            <div className="py-4 space-y-2">
+              <p className="text-xs text-[#55403E] leading-relaxed">
+                Authentication and multi-user team spaces will be available in the upcoming version.
               </p>
-              <div className="rounded-xl bg-[#f2f8f4] p-3 text-xs text-[#34673b] border border-[#AEDBB8]/60 space-y-1">
-                <p className="font-semibold">Theo yêu cầu Assignment 1:</p>
-                <p>
-                  Trang CRUD Task hiện tại hoạt động công khai hoàn toàn (public) — bất kỳ ai cũng có
-                  thể thêm, xem, sửa, xóa công việc trực tiếp mà không cần đăng nhập.
+              <div className="rounded-xl bg-[#FAF7F2] p-3 text-xs text-[#8F2520] border border-[#FEEFCD]">
+                <p className="font-semibold mb-1">Public Workspace</p>
+                <p className="text-[#55403E]">
+                  You can freely create, view, edit, and manage all tasks right now on the homepage.
                 </p>
               </div>
             </div>
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-1">
               <button
                 onClick={() => setShowLoginModal(false)}
-                className="rounded-xl bg-[#45834D] px-4 py-2 text-sm font-medium text-white hover:bg-[#34673b] transition-all"
+                className="rounded-xl bg-[#AD3029] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F2520] transition-all cursor-pointer"
               >
-                Đã hiểu, quay lại
+                Got it
               </button>
             </div>
           </div>

@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7faf8;
-  --foreground: #142217;
+  --background: #FAF7F2;
+  --foreground: #221514;
 
-  /* Custom Jade Palette from User Reference */
-  --jade-100: #AEDBB8;
-  --jade-200: #8FCA97;
-  --jade-300: #68A877;
-  --jade-400: #45834D;
-  --jade-500: #34673b;
-  --jade-50: #f2f8f4;
-  --jade-border: rgba(104, 168, 119, 0.25);
+  /* Red Velvet Palette from User Reference */
+  --velvet-primary: #AD3029;
+  --velvet-coral: #CD5252;
+  --velvet-rose: #CC8780;
+  --velvet-cream: #FEEFCD;
+  --velvet-dark: #8F2520;
+  --velvet-soft-bg: #F5EFEB;
+  --velvet-border: rgba(173, 48, 41, 0.12);
+  --velvet-border-subtle: rgba(204, 135, 128, 0.25);
 }
 
 @theme inline {
@@ -28,42 +29,34 @@ body {
   overflow-x: hidden;
 }
 
-/* Jade Custom Utilities */
-.bg-jade-50 { background-color: var(--jade-50); }
-.bg-jade-100 { background-color: var(--jade-100); }
-.bg-jade-200 { background-color: var(--jade-200); }
-.bg-jade-300 { background-color: var(--jade-300); }
-.bg-jade-400 { background-color: var(--jade-400); }
-.bg-jade-500 { background-color: var(--jade-500); }
+/* Red Velvet Custom Utilities */
+.bg-velvet-primary { background-color: var(--velvet-primary); }
+.bg-velvet-coral { background-color: var(--velvet-coral); }
+.bg-velvet-rose { background-color: var(--velvet-rose); }
+.bg-velvet-cream { background-color: var(--velvet-cream); }
+.bg-velvet-dark { background-color: var(--velvet-dark); }
+.bg-velvet-soft { background-color: var(--velvet-soft-bg); }
 
-.text-jade-100 { color: var(--jade-100); }
-.text-jade-200 { color: var(--jade-200); }
-.text-jade-300 { color: var(--jade-300); }
-.text-jade-400 { color: var(--jade-400); }
-.text-jade-500 { color: var(--jade-500); }
+.text-velvet-primary { color: var(--velvet-primary); }
+.text-velvet-coral { color: var(--velvet-coral); }
+.text-velvet-rose { color: var(--velvet-rose); }
+.text-velvet-cream { color: var(--velvet-cream); }
+.text-velvet-dark { color: var(--velvet-dark); }
 
-.border-jade-100 { border-color: var(--jade-100); }
-.border-jade-200 { border-color: var(--jade-200); }
-.border-jade-300 { border-color: var(--jade-300); }
-.border-jade-400 { border-color: var(--jade-400); }
-.border-jade-border { border-color: var(--jade-border); }
+.border-velvet-border { border-color: var(--velvet-border); }
+.border-velvet-subtle { border-color: var(--velvet-border-subtle); }
+.border-velvet-primary { border-color: var(--velvet-primary); }
+.border-velvet-rose { border-color: var(--velvet-rose); }
 
-/* Glassmorphism Effect */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--jade-border);
+/* Premium Glass & Card Styling */
+.velvet-card {
+  background: #FFFFFF;
+  border: 1px solid var(--velvet-border);
+  box-shadow: 0 2px 12px -2px rgba(173, 48, 41, 0.05);
+  transition: all 0.2s ease-in-out;
 }
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(174, 219, 184, 0.4);
-  box-shadow: 0 4px 20px -2px rgba(69, 131, 77, 0.06);
-}
-
-.glass-card:hover {
-  border-color: var(--jade-200);
-  box-shadow: 0 10px 25px -4px rgba(69, 131, 77, 0.12);
+.velvet-card:hover {
+  border-color: rgba(205, 82, 82, 0.35);
+  box-shadow: 0 8px 24px -4px rgba(173, 48, 41, 0.1);
 }

@@ -15,9 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TaskTeam – Task & Team Management App",
-  description:
-    "Technical foundation for Task & Team Management web app built with Next.js App Router, Prisma ORM, Supabase PostgreSQL, and Tailwind CSS. (SDN302 Assignment 1)",
+  title: "OrPit – Workspace & Task Management",
+  description: "A minimalist, high-performance task management workspace built with Next.js, Prisma, and Supabase.",
 };
 
 export default function RootLayout({
@@ -30,7 +29,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#f7faf8] text-[#142217]">
+      <body className="min-h-full flex flex-col bg-[#FAF7F2] text-[#221514]">
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
