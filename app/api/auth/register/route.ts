@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { hashPassword, signToken } from "@/lib/auth";
+import supabase from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Check email uniqueness
+    // Check email uniqueness in Prisma
     const existingUser = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
@@ -37,7 +38,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password & create user
+    // Register with Supabase Auth
+    try {
+      const { error: supabaseError } = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password: password,
+        options: {
+          data: { name: name.trim() },
+        },
+      });
+      if (supabaseError) {
+        console.warn("Supabase signUp note:", supabaseError.message);
+      }
+    } catch (sbErr) {
+      console.warn("Supabase signUp warning:", sbErr);
+    }
+
+    // Hash password & create user in Prisma database
     const hashedPassword = await hashPassword(password);
     const user = await prisma.user.create({
       data: {

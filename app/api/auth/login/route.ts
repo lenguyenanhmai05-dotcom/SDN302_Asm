@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { signToken, verifyPassword } from "@/lib/auth";
+import supabase from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,21 +18,46 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = String(email).trim().toLowerCase();
 
-    // Find user
-    const user = await prisma.user.findUnique({
+    // Find user in Prisma database
+    let user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
+    let isAuthenticated = false;
+
+    // 1. Try Supabase Auth
+    try {
+      const { data: sbData, error: sbError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password: String(password),
+      });
+
+      if (sbData?.user && !sbError) {
+        isAuthenticated = true;
+        // If user exists in Supabase but not yet in Prisma, sync into Prisma
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              name: sbData.user.user_metadata?.name || normalizedEmail.split("@")[0],
+              email: normalizedEmail,
+              password: "",
+            },
+          });
+        }
+      }
+    } catch (sbErr) {
+      console.warn("Supabase signIn attempt:", sbErr);
     }
 
-    // Check password
-    const isPasswordValid = await verifyPassword(String(password), user.password);
-    if (!isPasswordValid) {
+    // 2. Fallback to local Prisma password verification (e.g., seeded accounts)
+    if (!isAuthenticated && user && user.password) {
+      const isPasswordValid = await verifyPassword(String(password), user.password);
+      if (isPasswordValid) {
+        isAuthenticated = true;
+      }
+    }
+
+    if (!isAuthenticated || !user) {
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }

@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
+import supabase from "@/lib/supabase";
 
 export async function POST() {
+  try {
+    await supabase.auth.signOut();
+  } catch (err) {
+    console.warn("Supabase signOut error:", err);
+  }
+
   const response = NextResponse.json({
     success: true,
     message: "Logged out successfully",
