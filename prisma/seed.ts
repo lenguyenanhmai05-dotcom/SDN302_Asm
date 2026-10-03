@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding database for Assignment 2 with Vietnamese team members...");
+  console.log("🌱 Seeding database for Assignment 2 with 100% Vietnamese names and @gmail.com emails...");
 
   // Clean up existing records in order of relations
   await prisma.task.deleteMany({});
@@ -14,15 +14,15 @@ async function main() {
 
   const defaultHashedPassword = await bcrypt.hash("Password123!", 10);
 
-  // 1. Create Users
+  // 1. Create Users (All Vietnamese names and @gmail.com)
   const graderUser = await prisma.user.create({
     data: {
-      name: "Alex Rivera (Grader)",
-      email: "grader@sdn302.edu.vn",
+      name: "GiangVien (Grader)",
+      email: "grader.sdn302@gmail.com",
       password: defaultHashedPassword,
     },
   });
-  console.log(`Created Grader User: ${graderUser.email}`);
+  console.log(`Created Grader User: ${graderUser.name} (${graderUser.email})`);
 
   const anhMaiUser = await prisma.user.create({
     data: {
@@ -31,12 +31,12 @@ async function main() {
       password: defaultHashedPassword,
     },
   });
-  console.log(`Created Student User: ${anhMaiUser.email}`);
+  console.log(`Created Student User: ${anhMaiUser.name} (${anhMaiUser.email})`);
 
   const haBangUser = await prisma.user.create({
     data: {
       name: "HaBang",
-      email: "habang@orpit.app",
+      email: "habang.dev@gmail.com",
       password: defaultHashedPassword,
     },
   });
@@ -45,7 +45,7 @@ async function main() {
   const tamNhuUser = await prisma.user.create({
     data: {
       name: "TamNhu",
-      email: "tamnhu@orpit.app",
+      email: "tamnhu.dev@gmail.com",
       password: defaultHashedPassword,
     },
   });
@@ -54,18 +54,18 @@ async function main() {
   const nhuHoaUser = await prisma.user.create({
     data: {
       name: "NhuHoa",
-      email: "nhuhoa@orpit.app",
+      email: "nhuhoa.dev@gmail.com",
       password: defaultHashedPassword,
     },
   });
   console.log(`Created Team Member: ${nhuHoaUser.name} (${nhuHoaUser.email})`);
 
   // 2. Create Teams
-  // Team 1: Frontend & UI/UX Design System (Owned by AnhMai)
+  // Team 1: Nhóm Thiết Kế Giao Diện UI/UX (Owned by AnhMai)
   const designTeam = await prisma.team.create({
     data: {
-      name: "Frontend & UI/UX Design System",
-      description: "Modern web application architecture, Red Velvet design system, and responsive component library.",
+      name: "Nhóm Thiết Kế Giao Diện UI/UX",
+      description: "Phát triển kiến trúc giao diện web hiện đại, hệ thống thiết kế Red Velvet và thư viện component trực quan.",
       ownerId: anhMaiUser.id,
       members: {
         create: [
@@ -80,11 +80,11 @@ async function main() {
   });
   console.log(`Created Team: ${designTeam.name}`);
 
-  // Team 2: Fullstack Cloud & DevOps (Owned by AnhMai)
+  // Team 2: Nhóm Phát Triển Hệ Thống Cloud & DevOps (Owned by AnhMai)
   const devopsTeam = await prisma.team.create({
     data: {
-      name: "Fullstack Cloud & DevOps",
-      description: "PostgreSQL database migrations on Supabase, Vercel deployments, and CI/CD pipelines.",
+      name: "Nhóm Phát Triển Cloud & DevOps",
+      description: "Quản lý cơ sở dữ liệu PostgreSQL Supabase, triển khai tự động Vercel và xây dựng đường ống CI/CD.",
       ownerId: anhMaiUser.id,
       members: {
         create: [
@@ -99,11 +99,11 @@ async function main() {
   });
   console.log(`Created Team: ${devopsTeam.name}`);
 
-  // Team 3: Core Engineering Team (Owned by Alex Rivera)
+  // Team 3: Đội Ngũ Kỹ Thuật Lõi (Core Engineering) (Owned by GiangVien)
   const engTeam = await prisma.team.create({
     data: {
-      name: "Core Engineering Team",
-      description: "Frontend architecture, API integrations, and continuous cloud deployments.",
+      name: "Đội Ngũ Kỹ Thuật Lõi (Core Engineering)",
+      description: "Xây dựng các module bảo mật, xác thực người dùng JWT và Route Handlers hệ thống.",
       ownerId: graderUser.id,
       members: {
         create: [
@@ -117,11 +117,11 @@ async function main() {
   });
   console.log(`Created Team: ${engTeam.name}`);
 
-  // Team 4: Mobile & Product Launch (Owned by HaBang)
+  // Team 4: Dự Án Ứng Dụng Di Động (Mobile App) (Owned by HaBang)
   const mobileTeam = await prisma.team.create({
     data: {
-      name: "Mobile & Product Launch",
-      description: "Preparing iOS and Android releases, landing pages, and QA testing.",
+      name: "Dự Án Ứng Dụng Di Động (Mobile App)",
+      description: "Thiết kế trải nghiệm người dùng trên thiết bị di động, tối ưu hiệu năng và kiểm thử QA.",
       ownerId: haBangUser.id,
       members: {
         create: [
@@ -138,8 +138,8 @@ async function main() {
   // 3. Create Tasks for Design Team (AnhMai's Team)
   const designTasks = [
     {
-      title: "Refactor navigation and header components",
-      description: "Streamlined brand logo, removed legacy badges, and optimized layout spacing.",
+      title: "Thiết kế và hoàn thiện thanh điều hướng giao diện",
+      description: "Tối giản logo thương hiệu, sắp xếp các menu tiện ích và bố cục không gian hiển thị.",
       status: "DONE",
       priority: "HIGH",
       dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
@@ -148,8 +148,8 @@ async function main() {
       creatorId: anhMaiUser.id,
     },
     {
-      title: "Implement responsive Kanban board with quick status cycling",
-      description: "Organized tasks across To Do, In Progress, and Done columns with real-time UI feedback.",
+      title: "Xây dựng bảng Kanban kéo thả và đổi trạng thái nhanh",
+      description: "Phân chia công việc theo 3 cột Cần làm, Đang làm và Hoàn thành kèm cập nhật tức thời.",
       status: "IN_PROGRESS",
       priority: "HIGH",
       dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
@@ -158,8 +158,8 @@ async function main() {
       creatorId: anhMaiUser.id,
     },
     {
-      title: "Audit accessibility (a11y) & WCAG contrast compliance",
-      description: "Ensure high-contrast palette and readable typography on mobile and desktop screens.",
+      title: "Kiểm tra độ tương phản màu sắc và khả năng truy cập (a11y)",
+      description: "Đảm bảo bảng màu tương phản cao, phông chữ hiển thị rõ nét trên cả máy tính và điện thoại.",
       status: "TO_DO",
       priority: "MEDIUM",
       dueDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
@@ -168,8 +168,8 @@ async function main() {
       creatorId: anhMaiUser.id,
     },
     {
-      title: "Prepare Assignment 2 video walkthrough and demo",
-      description: "Record step-by-step showcase of team creation, member invitation, and task management.",
+      title: "Chuẩn bị tài liệu và video báo cáo Assignment 2",
+      description: "Ghi lại quy trình tạo team, mời thành viên qua email và quản lý công việc trên nhóm.",
       status: "TO_DO",
       priority: "HIGH",
       dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
@@ -183,11 +183,11 @@ async function main() {
     await prisma.task.create({ data: t });
   }
 
-  // 4. Create Tasks for DevOps Team
+  // 4. Create Tasks for DevOps Team (AnhMai's Team)
   const devopsTasks = [
     {
-      title: "Configure Supabase connection pooling and migrations",
-      description: "Verified transaction pooler on port 6543 and direct session pooler on port 5432.",
+      title: "Cấu hình kết nối Supabase và biến môi trường Vercel",
+      description: "Kiểm tra kết nối pooling cổng 6543 và direct session cổng 5432 trên nền tảng Supabase.",
       status: "DONE",
       priority: "HIGH",
       dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
@@ -196,8 +196,8 @@ async function main() {
       creatorId: anhMaiUser.id,
     },
     {
-      title: "Automated smoke tests for RESTful API routes",
-      description: "Validate all 15 endpoints covering auth, teams, members, and tasks.",
+      title: "Kiểm thử tự động 15 endpoint API RESTful",
+      description: "Kiểm tra tất cả chức năng xác thực, phân quyền nhóm và quản lý task tự động.",
       status: "IN_PROGRESS",
       priority: "HIGH",
       dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
@@ -206,8 +206,8 @@ async function main() {
       creatorId: anhMaiUser.id,
     },
     {
-      title: "Set up environment variables and staging branches on Vercel",
-      description: "Configure DATABASE_URL and JWT_SECRET on Vercel deployment console.",
+      title: "Tối ưu hóa tốc độ tải trang và caching dữ liệu",
+      description: "Áp dụng cơ chế render linh hoạt và tinh giản gói bundle xuất bản.",
       status: "TO_DO",
       priority: "MEDIUM",
       dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -224,8 +224,8 @@ async function main() {
   // 5. Create Sample Tasks for Core Engineering Team
   const engTasks = [
     {
-      title: "Set up JWT authentication & HTTP-only session cookies",
-      description: "Implemented custom JWT auth with bcryptjs and secure HTTP-only cookies.",
+      title: "Thiết lập hệ thống xác thực JWT và cookie HTTP-only",
+      description: "Sử dụng thư viện jose chuẩn hóa và mã hóa mật khẩu bảo mật bằng bcryptjs.",
       status: "DONE",
       priority: "HIGH",
       dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
@@ -234,8 +234,8 @@ async function main() {
       creatorId: graderUser.id,
     },
     {
-      title: "Build Kanban Board with drag-and-drop & status cycle",
-      description: "Interactive board view supporting To Do, In Progress, and Done columns with real-time updates.",
+      title: "Phân quyền vai trò Trưởng nhóm (Owner) và Thành viên (Member)",
+      description: "Kiểm tra quyền hạn sửa, xóa nhóm và quyền xóa công việc theo đúng quy tắc.",
       status: "IN_PROGRESS",
       priority: "HIGH",
       dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
@@ -244,8 +244,8 @@ async function main() {
       creatorId: graderUser.id,
     },
     {
-      title: "Implement member invitation by email & role checking",
-      description: "Add members to workspace and enforce Owner-only permissions on team configuration.",
+      title: "Xây dựng tính năng mời thành viên bằng email",
+      description: "Thêm thành viên vào nhóm qua địa chỉ email có kiểm tra trùng lặp.",
       status: "DONE",
       priority: "MEDIUM",
       dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
@@ -254,8 +254,8 @@ async function main() {
       creatorId: graderUser.id,
     },
     {
-      title: "Deploy Vercel project with Supabase cloud connection pooling",
-      description: "Verify production database connectivity and automated deployment triggers.",
+      title: "Triển khai ứng dụng hoàn chỉnh lên dịch vụ đám mây Vercel",
+      description: "Xác nhận website hoạt động trực tiếp ổn định và kết nối thông suốt với Supabase.",
       status: "TO_DO",
       priority: "MEDIUM",
       dueDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
@@ -269,11 +269,11 @@ async function main() {
     await prisma.task.create({ data: t });
   }
 
-  // 6. Create Sample Tasks for Mobile & Product Launch Team
+  // 6. Create Sample Tasks for Mobile Team
   const mobileTasks = [
     {
-      title: "Design mobile-first responsive dashboard layout",
-      description: "Optimized viewport for mobile tablets and desktop widths.",
+      title: "Tối ưu hóa giao diện thân thiện trên điện thoại và máy tính bảng",
+      description: "Kiểm tra tính tương thích trên nhiều kích cỡ màn hình khác nhau.",
       status: "DONE",
       priority: "HIGH",
       dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
@@ -282,8 +282,8 @@ async function main() {
       creatorId: haBangUser.id,
     },
     {
-      title: "Run automated end-to-end smoke tests on CRUD endpoints",
-      description: "Check GET, POST, PUT, DELETE operations for teams, members, and tasks.",
+      title: "Kiểm thử trải nghiệm người dùng và hoàn thiện tài liệu nộp bài",
+      description: "Rà soát toàn bộ các tiêu chí chấm điểm và xuất bản file báo cáo Word.",
       status: "IN_PROGRESS",
       priority: "MEDIUM",
       dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
@@ -300,20 +300,20 @@ async function main() {
   // 7. Create a couple of public homepage tasks
   const publicTasks = [
     {
-      title: "Welcome to OrPit Workspace System",
-      description: "Public task demonstration. Log in to access multi-team workspaces and task assignments.",
+      title: "Chào mừng đến với hệ thống quản lý công việc OrPit",
+      description: "Hệ thống quản lý công việc và không gian làm việc nhóm trực tuyến.",
       status: "DONE",
       priority: "HIGH",
       dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-      creatorId: graderUser.id,
+      creatorId: anhMaiUser.id,
     },
     {
-      title: "Explore Team Collaboration Features",
-      description: "Sign in with the test account or create your own account to experience full team workspaces.",
+      title: "Khám phá tính năng cộng tác nhóm và phân công công việc",
+      description: "Đăng nhập tài khoản để trải nghiệm toàn bộ các tính năng không gian nhóm và bảng Kanban.",
       status: "IN_PROGRESS",
       priority: "MEDIUM",
       dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-      creatorId: graderUser.id,
+      creatorId: anhMaiUser.id,
     },
   ];
 
@@ -321,7 +321,7 @@ async function main() {
     await prisma.task.create({ data: t });
   }
 
-  console.log("✅ Seed completed successfully with HaBang, TamNhu, NhuHoa!");
+  console.log("✅ Seed completed successfully with 100% Vietnamese names and @gmail.com!");
 }
 
 main()

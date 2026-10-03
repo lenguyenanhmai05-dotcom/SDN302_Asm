@@ -15,7 +15,7 @@ Full Name: Le Nguyen Anh Mai
 GitHub Repository URL: https://github.com/lenguyenanhmai05-dotcom/SDN302_Asm
 Deployed Website URL (Vercel): https://sdn-302-asm-git-main-lenguyenanhmais-projects.vercel.app
 Separate Backend URL (NestJS on Render) — write N/A if not used: N/A
-Test Account Email: grader@sdn302.edu.vn
+Test Account Email: grader.sdn302@gmail.com
 Test Account Password: Password123!
 This test account is already email-verified / ready to log in immediately, with no confirmation link needed (Yes / No): Yes
 Self-registration works, so a grader can create their own account (Yes / No): Yes

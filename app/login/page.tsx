@@ -37,7 +37,7 @@ export default function LoginPage() {
   };
 
   const handleFillGraderAccount = () => {
-    setEmail("grader@sdn302.edu.vn");
+    setEmail("grader.sdn302@gmail.com");
     setPassword("Password123!");
     setError("");
   };
@@ -75,7 +75,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-bold text-[#8F2520]">⚡ Grader Test Account</p>
-              <p className="text-[11px] text-[#7A6664] mt-0.5">grader@sdn302.edu.vn / Password123!</p>
+              <p className="text-[11px] text-[#7A6664] mt-0.5">grader.sdn302@gmail.com / Password123!</p>
             </div>
             <button
               type="button"

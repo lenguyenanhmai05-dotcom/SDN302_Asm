@@ -43,7 +43,7 @@ async function runTests() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: "grader@sdn302.edu.vn",
+        email: "grader.sdn302@gmail.com",
         password: "Password123!",
       }),
     });
@@ -52,7 +52,7 @@ async function runTests() {
       cookieHeader = setCookie.split(";")[0];
     }
     const data = await res.json();
-    assert(res.status === 200 && data.user.email === "grader@sdn302.edu.vn", "POST /api/auth/login logs in grader test account");
+    assert(res.status === 200 && data.user.email === "grader.sdn302@gmail.com", "POST /api/auth/login logs in grader test account");
     graderToken = data.token;
   } catch (e: any) {
     assert(false, "POST /api/auth/login", e.message);
@@ -70,7 +70,7 @@ async function runTests() {
       headers: authHeaders,
     });
     const data = await res.json();
-    assert(res.status === 200 && data.user.email === "grader@sdn302.edu.vn", "GET /api/auth/me returns authenticated user");
+    assert(res.status === 200 && data.user.email === "grader.sdn302@gmail.com", "GET /api/auth/me returns authenticated user");
   } catch (e: any) {
     assert(false, "GET /api/auth/me", e.message);
   }
@@ -100,7 +100,7 @@ async function runTests() {
       }),
     });
     const data = await res.json();
-    assert(res.status === 201 && data.id && data.owner.email === "grader@sdn302.edu.vn", "POST /api/teams creates team and sets owner");
+    assert(res.status === 201 && data.id && data.owner.email === "grader.sdn302@gmail.com", "POST /api/teams creates team and sets owner");
     createdTeamId = data.id;
   } catch (e: any) {
     assert(false, "POST /api/teams", e.message);
@@ -140,12 +140,12 @@ async function runTests() {
       method: "POST",
       headers: authHeaders,
       body: JSON.stringify({
-        email: "sarah.dev@orpit.app",
+        email: "habang.dev@gmail.com",
         role: "MEMBER",
       }),
     });
     const data = await res.json();
-    assert(res.status === 201 && data.user.email === "sarah.dev@orpit.app", "POST /api/teams/:id/members adds member by email");
+    assert(res.status === 201 && data.user.email === "habang.dev@gmail.com", "POST /api/teams/:id/members adds member by email");
     addedMemberUserId = data.user.id;
   } catch (e: any) {
     assert(false, "POST /api/teams/:id/members", e.message);

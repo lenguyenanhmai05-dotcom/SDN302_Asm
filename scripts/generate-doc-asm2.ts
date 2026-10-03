@@ -53,7 +53,7 @@ async function generateDocx() {
               new TextRun({ text: "Separate Backend URL (NestJS on Render) — write N/A if not used: ", bold: true }),
               new TextRun("N/A\n"),
               new TextRun({ text: "Test Account Email: ", bold: true }),
-              new TextRun("grader@sdn302.edu.vn\n"),
+              new TextRun("grader.sdn302@gmail.com\n"),
               new TextRun({ text: "Test Account Password: ", bold: true }),
               new TextRun("Password123!\n"),
               new TextRun({
