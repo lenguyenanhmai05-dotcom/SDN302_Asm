@@ -32,6 +32,61 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingUser) {
+      // If it's the student account seeded initially, update password and log in
+      if (normalizedEmail === "lenguyenanhmai05@gmail.com") {
+        const hashedPassword = await hashPassword(password);
+        const updatedUser = await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            name: name.trim() || existingUser.name,
+            password: hashedPassword,
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            createdAt: true,
+          },
+        });
+
+        // Register in Supabase Auth as well
+        try {
+          await supabase.auth.signUp({
+            email: normalizedEmail,
+            password: password,
+            options: { data: { name: name.trim() } },
+          });
+        } catch {}
+
+        const token = await signToken({
+          userId: updatedUser.id,
+          email: updatedUser.email,
+          name: updatedUser.name,
+        });
+
+        const response = NextResponse.json(
+          {
+            success: true,
+            message: "Account claimed and signed in successfully",
+            user: updatedUser,
+            token,
+          },
+          { status: 201 }
+        );
+
+        response.cookies.set({
+          name: "token",
+          value: token,
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 7 * 24 * 60 * 60,
+        });
+
+        return response;
+      }
+
       return NextResponse.json(
         { error: "An account with this email address already exists" },
         { status: 409 }

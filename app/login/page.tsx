@@ -36,12 +36,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleFillGraderAccount = () => {
-    setEmail("grader.sdn302@gmail.com");
-    setPassword("Password123!");
-    setError("");
-  };
-
   return (
     <div className="flex min-h-[calc(100vh-160px)] items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8 rounded-3xl border border-[rgba(173,48,41,0.14)] bg-white p-8 sm:p-10 shadow-lg shadow-[#AD3029]/5">
@@ -68,23 +62,6 @@ export default function LoginPage() {
           <p className="mt-2 text-xs sm:text-sm text-[#7A6664]">
             Sign in to access your teams, workspaces, and assignments.
           </p>
-        </div>
-
-        {/* Quick Demo Grader Account Box */}
-        <div className="rounded-2xl border border-[#FEEFCD] bg-[#FAF7F2] p-4 text-xs text-[#55403E]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-bold text-[#8F2520]">⚡ Grader Test Account</p>
-              <p className="text-[11px] text-[#7A6664] mt-0.5">grader.sdn302@gmail.com / Password123!</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleFillGraderAccount}
-              className="rounded-lg bg-[#FEEFCD] px-2.5 py-1 text-xs font-semibold text-[#8F2520] hover:bg-[#AD3029] hover:text-white transition-all cursor-pointer"
-            >
-              Quick Fill
-            </button>
-          </div>
         </div>
 
         {error && (
