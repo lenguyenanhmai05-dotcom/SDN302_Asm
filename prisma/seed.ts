@@ -14,7 +14,7 @@ async function main() {
 
   const defaultHashedPassword = await bcrypt.hash("Password123!", 10);
 
-  // 1. Create Test Account for Grader & Sample Users
+  // 1. Create Users
   const graderUser = await prisma.user.create({
     data: {
       name: "Alex Rivera (Grader)",
@@ -23,6 +23,15 @@ async function main() {
     },
   });
   console.log(`Created Grader User: ${graderUser.email}`);
+
+  const anhMaiUser = await prisma.user.create({
+    data: {
+      name: "AnhMai",
+      email: "lenguyenanhmai05@gmail.com",
+      password: defaultHashedPassword,
+    },
+  });
+  console.log(`Created Student User: ${anhMaiUser.email}`);
 
   const sarahUser = await prisma.user.create({
     data: {
@@ -43,7 +52,42 @@ async function main() {
   console.log(`Created Sample User: ${johnUser.email}`);
 
   // 2. Create Teams
-  // Team 1: Core Engineering Team (Owned by Alex Rivera)
+  // Team 1: Frontend & UI/UX Design System (Owned by AnhMai)
+  const designTeam = await prisma.team.create({
+    data: {
+      name: "Frontend & UI/UX Design System",
+      description: "Modern web application architecture, Red Velvet design system, and responsive component library.",
+      ownerId: anhMaiUser.id,
+      members: {
+        create: [
+          { userId: anhMaiUser.id, role: "OWNER" },
+          { userId: sarahUser.id, role: "MEMBER" },
+          { userId: johnUser.id, role: "MEMBER" },
+          { userId: graderUser.id, role: "MEMBER" },
+        ],
+      },
+    },
+  });
+  console.log(`Created Team: ${designTeam.name}`);
+
+  // Team 2: Fullstack Cloud & DevOps (Owned by AnhMai)
+  const devopsTeam = await prisma.team.create({
+    data: {
+      name: "Fullstack Cloud & DevOps",
+      description: "PostgreSQL database migrations on Supabase, Vercel deployments, and CI/CD pipelines.",
+      ownerId: anhMaiUser.id,
+      members: {
+        create: [
+          { userId: anhMaiUser.id, role: "OWNER" },
+          { userId: johnUser.id, role: "MEMBER" },
+          { userId: graderUser.id, role: "MEMBER" },
+        ],
+      },
+    },
+  });
+  console.log(`Created Team: ${devopsTeam.name}`);
+
+  // Team 3: Core Engineering Team (Owned by Alex Rivera)
   const engTeam = await prisma.team.create({
     data: {
       name: "Core Engineering Team",
@@ -52,6 +96,7 @@ async function main() {
       members: {
         create: [
           { userId: graderUser.id, role: "OWNER" },
+          { userId: anhMaiUser.id, role: "MEMBER" },
           { userId: sarahUser.id, role: "MEMBER" },
           { userId: johnUser.id, role: "MEMBER" },
         ],
@@ -60,7 +105,7 @@ async function main() {
   });
   console.log(`Created Team: ${engTeam.name}`);
 
-  // Team 2: Mobile App Launch (Owned by Sarah Connor)
+  // Team 4: Mobile & Product Launch (Owned by Sarah Connor)
   const mobileTeam = await prisma.team.create({
     data: {
       name: "Mobile & Product Launch",
@@ -69,6 +114,7 @@ async function main() {
       members: {
         create: [
           { userId: sarahUser.id, role: "OWNER" },
+          { userId: anhMaiUser.id, role: "MEMBER" },
           { userId: graderUser.id, role: "MEMBER" },
         ],
       },
@@ -76,7 +122,93 @@ async function main() {
   });
   console.log(`Created Team: ${mobileTeam.name}`);
 
-  // 3. Create Sample Tasks for Core Engineering Team
+  // 3. Create Tasks for Design Team (AnhMai's Team)
+  const designTasks = [
+    {
+      title: "Refactor navigation and header components",
+      description: "Streamlined brand logo, removed legacy badges, and optimized layout spacing.",
+      status: "DONE",
+      priority: "HIGH",
+      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      teamId: designTeam.id,
+      assigneeId: anhMaiUser.id,
+      creatorId: anhMaiUser.id,
+    },
+    {
+      title: "Implement responsive Kanban board with quick status cycling",
+      description: "Organized tasks across To Do, In Progress, and Done columns with real-time UI feedback.",
+      status: "IN_PROGRESS",
+      priority: "HIGH",
+      dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+      teamId: designTeam.id,
+      assigneeId: sarahUser.id,
+      creatorId: anhMaiUser.id,
+    },
+    {
+      title: "Audit accessibility (a11y) & WCAG contrast compliance",
+      description: "Ensure high-contrast palette and readable typography on mobile and desktop screens.",
+      status: "TO_DO",
+      priority: "MEDIUM",
+      dueDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
+      teamId: designTeam.id,
+      assigneeId: johnUser.id,
+      creatorId: anhMaiUser.id,
+    },
+    {
+      title: "Prepare Assignment 2 video walkthrough and demo",
+      description: "Record step-by-step showcase of team creation, member invitation, and task management.",
+      status: "TO_DO",
+      priority: "HIGH",
+      dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      teamId: designTeam.id,
+      assigneeId: anhMaiUser.id,
+      creatorId: anhMaiUser.id,
+    },
+  ];
+
+  for (const t of designTasks) {
+    await prisma.task.create({ data: t });
+  }
+
+  // 4. Create Tasks for DevOps Team
+  const devopsTasks = [
+    {
+      title: "Configure Supabase connection pooling and migrations",
+      description: "Verified transaction pooler on port 6543 and direct session pooler on port 5432.",
+      status: "DONE",
+      priority: "HIGH",
+      dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      teamId: devopsTeam.id,
+      assigneeId: johnUser.id,
+      creatorId: anhMaiUser.id,
+    },
+    {
+      title: "Automated smoke tests for RESTful API routes",
+      description: "Validate all 15 endpoints covering auth, teams, members, and tasks.",
+      status: "IN_PROGRESS",
+      priority: "HIGH",
+      dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+      teamId: devopsTeam.id,
+      assigneeId: anhMaiUser.id,
+      creatorId: anhMaiUser.id,
+    },
+    {
+      title: "Set up environment variables and staging branches on Vercel",
+      description: "Configure DATABASE_URL and JWT_SECRET on Vercel deployment console.",
+      status: "TO_DO",
+      priority: "MEDIUM",
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      teamId: devopsTeam.id,
+      assigneeId: graderUser.id,
+      creatorId: anhMaiUser.id,
+    },
+  ];
+
+  for (const t of devopsTasks) {
+    await prisma.task.create({ data: t });
+  }
+
+  // 5. Create Sample Tasks for Core Engineering Team
   const engTasks = [
     {
       title: "Set up JWT authentication & HTTP-only session cookies",
@@ -115,7 +247,7 @@ async function main() {
       priority: "MEDIUM",
       dueDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
       teamId: engTeam.id,
-      assigneeId: null,
+      assigneeId: anhMaiUser.id,
       creatorId: graderUser.id,
     },
   ];
@@ -124,7 +256,7 @@ async function main() {
     await prisma.task.create({ data: t });
   }
 
-  // 4. Create Sample Tasks for Mobile & Product Launch Team
+  // 6. Create Sample Tasks for Mobile & Product Launch Team
   const mobileTasks = [
     {
       title: "Design mobile-first responsive dashboard layout",
@@ -143,17 +275,7 @@ async function main() {
       priority: "MEDIUM",
       dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       teamId: mobileTeam.id,
-      assigneeId: graderUser.id,
-      creatorId: sarahUser.id,
-    },
-    {
-      title: "Prepare Assignment 2 report documentation",
-      description: "Complete submission checklist, test accounts, and architecture overview.",
-      status: "TO_DO",
-      priority: "HIGH",
-      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      teamId: mobileTeam.id,
-      assigneeId: graderUser.id,
+      assigneeId: anhMaiUser.id,
       creatorId: sarahUser.id,
     },
   ];
@@ -162,7 +284,7 @@ async function main() {
     await prisma.task.create({ data: t });
   }
 
-  // 5. Create a couple of public homepage tasks
+  // 7. Create a couple of public homepage tasks
   const publicTasks = [
     {
       title: "Welcome to OrPit Workspace System",
@@ -186,7 +308,7 @@ async function main() {
     await prisma.task.create({ data: t });
   }
 
-  console.log("✅ Seed completed successfully!");
+  console.log("✅ Seed completed successfully with all teams & users!");
 }
 
 main()
