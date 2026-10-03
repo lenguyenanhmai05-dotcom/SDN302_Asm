@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding database for Assignment 2...");
+  console.log("🌱 Seeding database for Assignment 2 with Vietnamese team members...");
 
   // Clean up existing records in order of relations
   await prisma.task.deleteMany({});
@@ -33,23 +33,32 @@ async function main() {
   });
   console.log(`Created Student User: ${anhMaiUser.email}`);
 
-  const sarahUser = await prisma.user.create({
+  const haBangUser = await prisma.user.create({
     data: {
-      name: "Sarah Connor",
-      email: "sarah.dev@orpit.app",
+      name: "HaBang",
+      email: "habang@orpit.app",
       password: defaultHashedPassword,
     },
   });
-  console.log(`Created Sample User: ${sarahUser.email}`);
+  console.log(`Created Team Member: ${haBangUser.name} (${haBangUser.email})`);
 
-  const johnUser = await prisma.user.create({
+  const tamNhuUser = await prisma.user.create({
     data: {
-      name: "John Doe",
-      email: "john.lead@orpit.app",
+      name: "TamNhu",
+      email: "tamnhu@orpit.app",
       password: defaultHashedPassword,
     },
   });
-  console.log(`Created Sample User: ${johnUser.email}`);
+  console.log(`Created Team Member: ${tamNhuUser.name} (${tamNhuUser.email})`);
+
+  const nhuHoaUser = await prisma.user.create({
+    data: {
+      name: "NhuHoa",
+      email: "nhuhoa@orpit.app",
+      password: defaultHashedPassword,
+    },
+  });
+  console.log(`Created Team Member: ${nhuHoaUser.name} (${nhuHoaUser.email})`);
 
   // 2. Create Teams
   // Team 1: Frontend & UI/UX Design System (Owned by AnhMai)
@@ -61,8 +70,9 @@ async function main() {
       members: {
         create: [
           { userId: anhMaiUser.id, role: "OWNER" },
-          { userId: sarahUser.id, role: "MEMBER" },
-          { userId: johnUser.id, role: "MEMBER" },
+          { userId: haBangUser.id, role: "MEMBER" },
+          { userId: tamNhuUser.id, role: "MEMBER" },
+          { userId: nhuHoaUser.id, role: "MEMBER" },
           { userId: graderUser.id, role: "MEMBER" },
         ],
       },
@@ -79,7 +89,9 @@ async function main() {
       members: {
         create: [
           { userId: anhMaiUser.id, role: "OWNER" },
-          { userId: johnUser.id, role: "MEMBER" },
+          { userId: tamNhuUser.id, role: "MEMBER" },
+          { userId: haBangUser.id, role: "MEMBER" },
+          { userId: nhuHoaUser.id, role: "MEMBER" },
           { userId: graderUser.id, role: "MEMBER" },
         ],
       },
@@ -97,24 +109,25 @@ async function main() {
         create: [
           { userId: graderUser.id, role: "OWNER" },
           { userId: anhMaiUser.id, role: "MEMBER" },
-          { userId: sarahUser.id, role: "MEMBER" },
-          { userId: johnUser.id, role: "MEMBER" },
+          { userId: haBangUser.id, role: "MEMBER" },
+          { userId: tamNhuUser.id, role: "MEMBER" },
         ],
       },
     },
   });
   console.log(`Created Team: ${engTeam.name}`);
 
-  // Team 4: Mobile & Product Launch (Owned by Sarah Connor)
+  // Team 4: Mobile & Product Launch (Owned by HaBang)
   const mobileTeam = await prisma.team.create({
     data: {
       name: "Mobile & Product Launch",
       description: "Preparing iOS and Android releases, landing pages, and QA testing.",
-      ownerId: sarahUser.id,
+      ownerId: haBangUser.id,
       members: {
         create: [
-          { userId: sarahUser.id, role: "OWNER" },
+          { userId: haBangUser.id, role: "OWNER" },
           { userId: anhMaiUser.id, role: "MEMBER" },
+          { userId: nhuHoaUser.id, role: "MEMBER" },
           { userId: graderUser.id, role: "MEMBER" },
         ],
       },
@@ -141,7 +154,7 @@ async function main() {
       priority: "HIGH",
       dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
       teamId: designTeam.id,
-      assigneeId: sarahUser.id,
+      assigneeId: haBangUser.id,
       creatorId: anhMaiUser.id,
     },
     {
@@ -151,7 +164,7 @@ async function main() {
       priority: "MEDIUM",
       dueDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
       teamId: designTeam.id,
-      assigneeId: johnUser.id,
+      assigneeId: tamNhuUser.id,
       creatorId: anhMaiUser.id,
     },
     {
@@ -161,7 +174,7 @@ async function main() {
       priority: "HIGH",
       dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       teamId: designTeam.id,
-      assigneeId: anhMaiUser.id,
+      assigneeId: nhuHoaUser.id,
       creatorId: anhMaiUser.id,
     },
   ];
@@ -179,7 +192,7 @@ async function main() {
       priority: "HIGH",
       dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
       teamId: devopsTeam.id,
-      assigneeId: johnUser.id,
+      assigneeId: tamNhuUser.id,
       creatorId: anhMaiUser.id,
     },
     {
@@ -227,7 +240,7 @@ async function main() {
       priority: "HIGH",
       dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
       teamId: engTeam.id,
-      assigneeId: sarahUser.id,
+      assigneeId: haBangUser.id,
       creatorId: graderUser.id,
     },
     {
@@ -237,7 +250,7 @@ async function main() {
       priority: "MEDIUM",
       dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
       teamId: engTeam.id,
-      assigneeId: johnUser.id,
+      assigneeId: tamNhuUser.id,
       creatorId: graderUser.id,
     },
     {
@@ -265,8 +278,8 @@ async function main() {
       priority: "HIGH",
       dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
       teamId: mobileTeam.id,
-      assigneeId: sarahUser.id,
-      creatorId: sarahUser.id,
+      assigneeId: haBangUser.id,
+      creatorId: haBangUser.id,
     },
     {
       title: "Run automated end-to-end smoke tests on CRUD endpoints",
@@ -276,7 +289,7 @@ async function main() {
       dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
       teamId: mobileTeam.id,
       assigneeId: anhMaiUser.id,
-      creatorId: sarahUser.id,
+      creatorId: haBangUser.id,
     },
   ];
 
@@ -308,7 +321,7 @@ async function main() {
     await prisma.task.create({ data: t });
   }
 
-  console.log("✅ Seed completed successfully with all teams & users!");
+  console.log("✅ Seed completed successfully with HaBang, TamNhu, NhuHoa!");
 }
 
 main()
