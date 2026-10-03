@@ -3,14 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "./AuthProvider";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { user, loading, logout } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-[rgba(173,48,41,0.08)] bg-[#FAF7F2]/85 backdrop-blur-md transition-all">
+      <header className="sticky top-0 z-40 border-b border-[rgba(173,48,41,0.08)] bg-[#FAF7F2]/90 backdrop-blur-md transition-all">
         <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between px-6 sm:px-10 lg:px-12">
           {/* Logo & Brand: OrPit */}
           <Link href="/" className="group flex items-center gap-3">
@@ -26,18 +28,29 @@ export default function Navbar() {
                 strokeLinejoin="round"
               >
                 <circle cx="12" cy="12" r="3.5" fill="#FEEFCD" stroke="none" />
-                <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-30 12 12)" stroke="#FFFFFF" strokeWidth="1.8" />
+                <ellipse
+                  cx="12"
+                  cy="12"
+                  rx="8"
+                  ry="4"
+                  transform="rotate(-30 12 12)"
+                  stroke="#FFFFFF"
+                  strokeWidth="1.8"
+                />
               </svg>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-2xl font-bold tracking-tight text-[#221514]">
                 OrPit
               </span>
+              <span className="rounded-full bg-[#FEEFCD] px-2 py-0.5 text-[10px] font-bold text-[#8F2520]">
+                v2
+              </span>
             </div>
           </Link>
 
-          {/* Clean Navigation */}
-          <nav className="flex items-center gap-2.5 sm:gap-4">
+          {/* Navigation Links */}
+          <nav className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/"
               className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
@@ -46,76 +59,97 @@ export default function Navbar() {
                   : "text-[#55403E] hover:bg-[rgba(173,48,41,0.06)] hover:text-[#AD3029]"
               }`}
             >
-              Tasks
+              Public Tasks
             </Link>
 
             <Link
               href="/teams"
               className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
-                pathname === "/teams"
+                pathname.startsWith("/teams")
                   ? "bg-[#AD3029] text-white shadow-xs"
                   : "text-[#55403E] hover:bg-[rgba(173,48,41,0.06)] hover:text-[#AD3029]"
               }`}
             >
-              <span>Teams</span>
-              <span className="rounded-full bg-[#FEEFCD] px-1.5 py-0.2 text-[10px] font-bold text-[#8F2520]">
-                v2
-              </span>
+              <span>Teams & Workspace</span>
             </Link>
 
             <div className="mx-1 h-5 w-px bg-[rgba(173,48,41,0.15)]" />
 
-            <button
-              onClick={() => setShowLoginModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(173,48,41,0.2)] bg-white px-4 py-2 text-sm font-semibold text-[#AD3029] shadow-2xs transition-all hover:bg-[#FEEFCD]/40 hover:border-[#AD3029] cursor-pointer"
-            >
-              <span>Sign In</span>
-            </button>
-          </nav>
-        </div>
-      </header>
+            {/* Auth Actions */}
+            {!loading && user ? (
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-xl bg-white border border-[rgba(173,48,41,0.12)] shadow-2xs">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FEEFCD] text-xs font-bold text-[#8F2520]">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-bold text-[#221514] leading-tight truncate max-w-[120px]">
+                      {user.name}
+                    </p>
+                    <p className="text-[10px] text-[#7A6664] leading-tight truncate max-w-[120px]">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
 
-      {/* Login Placeholder Modal */}
-      {showLoginModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-[rgba(173,48,41,0.15)] animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FEEFCD] text-[#AD3029]">
+                <button
+                  onClick={() => setShowLogoutConfirm(true)}
+                  title="Logout"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(173,48,41,0.2)] bg-white px-3.5 py-2 text-xs font-semibold text-[#AD3029] shadow-2xs transition-all hover:bg-[#FEEFCD]/40 hover:border-[#AD3029] cursor-pointer"
+                >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                     />
                   </svg>
-                </div>
-                <h3 className="text-base font-bold text-[#221514]">Sign In</h3>
+                  <span className="hidden sm:inline">Logout</span>
+                </button>
               </div>
+            ) : !loading ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold text-[#AD3029] hover:bg-[rgba(173,48,41,0.06)] transition-all"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="rounded-xl bg-[#AD3029] px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-2xs hover:bg-[#8F2520] transition-all"
+                >
+                  Register
+                </Link>
+              </div>
+            ) : null}
+          </nav>
+        </div>
+      </header>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-[rgba(173,48,41,0.15)] animate-in fade-in zoom-in-95 duration-150">
+            <h3 className="text-base font-bold text-[#221514]">Confirm Logout</h3>
+            <p className="mt-2 text-xs text-[#7A6664] leading-relaxed">
+              Are you sure you want to log out of your OrPit workspace account?
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
               <button
-                onClick={() => setShowLoginModal(false)}
-                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer"
               >
-                ✕
+                Cancel
               </button>
-            </div>
-            <div className="py-4 space-y-2">
-              <p className="text-xs text-[#55403E] leading-relaxed">
-                Authentication and multi-user team spaces will be available in the upcoming version.
-              </p>
-              <div className="rounded-xl bg-[#FAF7F2] p-3 text-xs text-[#8F2520] border border-[#FEEFCD]">
-                <p className="font-semibold mb-1">Public Workspace</p>
-                <p className="text-[#55403E]">
-                  You can freely create, view, edit, and manage all tasks right now on the homepage.
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end pt-1">
               <button
-                onClick={() => setShowLoginModal(false)}
-                className="rounded-xl bg-[#AD3029] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F2520] transition-all cursor-pointer"
+                onClick={async () => {
+                  setShowLogoutConfirm(false);
+                  await logout();
+                }}
+                className="rounded-xl bg-[#AD3029] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8F2520] cursor-pointer"
               >
-                Got it
+                Sign Out
               </button>
             </div>
           </div>
