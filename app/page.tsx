@@ -218,9 +218,9 @@ export default function HomePage() {
     }
   };
 
-  // Filtered Tasks
+  // Filtered & Sorted Tasks (Completed tasks at the bottom)
   const filteredTasks = useMemo(() => {
-    return tasks.filter((t) => {
+    const list = tasks.filter((t) => {
       if (statusFilter !== "ALL" && t.status !== statusFilter) return false;
       if (priorityFilter !== "ALL" && t.priority !== priorityFilter) return false;
       if (searchQuery.trim()) {
@@ -230,6 +230,15 @@ export default function HomePage() {
         if (!inTitle && !inDesc) return false;
       }
       return true;
+    });
+
+    return [...list].sort((a, b) => {
+      const aDone = a.status === "DONE" ? 1 : 0;
+      const bDone = b.status === "DONE" ? 1 : 0;
+      if (aDone !== bDone) {
+        return aDone - bDone; // Active tasks first, DONE tasks at the end
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [tasks, statusFilter, priorityFilter, searchQuery]);
 
@@ -257,57 +266,6 @@ export default function HomePage() {
           <span>{toastMessage.text}</span>
         </div>
       )}
-
-      {/* Assignment 2 Feature Banner */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-[#FEEFCD] bg-gradient-to-r from-white via-[#FAF7F2] to-[#FEEFCD]/40 p-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FEEFCD] text-[#AD3029]">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-[#AD3029] px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider">
-                Assignment 2
-              </span>
-              <h2 className="text-sm font-bold text-[#221514]">
-                Team Collaboration & Role-Based Workspaces
-              </h2>
-            </div>
-            <p className="text-xs text-[#7A6664] mt-0.5">
-              Sign in to create teams, invite members, assign tasks, and track workflows on Kanban boards.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
-          {user ? (
-            <Link
-              href="/teams"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#AD3029] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#8F2520] transition-all"
-            >
-              <span>Go to My Teams</span>
-              <span>→</span>
-            </Link>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-1 rounded-xl bg-[#AD3029] px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#8F2520] transition-all"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-1 rounded-xl border border-[rgba(173,48,41,0.2)] bg-white px-3.5 py-2 text-xs font-semibold text-[#AD3029] hover:bg-[#FEEFCD]/40 transition-all"
-              >
-                Register
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
 
       {/* Clean Unframed Header with Minimal Vertical Spacing */}
       <section className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

@@ -433,10 +433,10 @@ export default function TeamDetailPage({
     return false;
   };
 
-  // Filter tasks
+  // Filter and sort tasks (Completed tasks moved to the bottom)
   const filteredTasks = useMemo(() => {
     if (!team) return [];
-    return team.tasks.filter((t) => {
+    const list = team.tasks.filter((t) => {
       // Search
       if (search.trim()) {
         const query = search.toLowerCase();
@@ -454,6 +454,15 @@ export default function TeamDetailPage({
         if (assigneeFilter !== "UNASSIGNED" && t.assignee?.id !== assigneeFilter) return false;
       }
       return true;
+    });
+
+    return [...list].sort((a, b) => {
+      const aDone = a.status === "DONE" ? 1 : 0;
+      const bDone = b.status === "DONE" ? 1 : 0;
+      if (aDone !== bDone) {
+        return aDone - bDone; // Active tasks first, DONE tasks at the end
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [team, search, statusFilter, priorityFilter, assigneeFilter]);
 
