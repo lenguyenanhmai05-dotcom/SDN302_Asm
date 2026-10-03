@@ -43,9 +43,6 @@ export default function Navbar() {
               <span className="text-2xl font-bold tracking-tight text-[#221514]">
                 OrPit
               </span>
-              <span className="rounded-full bg-[#FEEFCD] px-2 py-0.5 text-[10px] font-bold text-[#8F2520]">
-                v2
-              </span>
             </div>
           </Link>
 
