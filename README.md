@@ -1,54 +1,76 @@
 # OrPit – Workspace & Task Management Application
 > **Course:** SDN302 – Software Development with Node.js & Cloud Database  
-> **Assignment 1:** Project Setup, Prisma & Deployment  
+> **Assignment 2:** Task & Team Management App: CRUD API with Authentication  
 > **Student:** Le Nguyen Anh Mai  
 > **Repository:** [https://github.com/lenguyenanhmai05-dotcom/SDN302_Asm](https://github.com/lenguyenanhmai05-dotcom/SDN302_Asm)  
+> **Live Website:** [https://sdn-302-asm-git-main-lenguyenanhmais-projects.vercel.app](https://sdn-302-asm-git-main-lenguyenanhmais-projects.vercel.app)
 
 ---
 
-## 📖 1. Project Overview
+## 📋 Submission Information (Automated Grading Labels)
 
-**OrPit** is a minimalist, high-performance task management workspace built for individuals and teams. This project establishes the complete technical foundation for the course:
-- **Next.js 16 (App Router, TypeScript)** for fullstack React application and RESTful Route Handlers.
-- **Prisma ORM** for type-safe database queries, schema migrations, and client generation.
-- **Cloud PostgreSQL on Supabase** with transaction and session connection poolers.
-- **Public Task CRUD Interface**: Anyone can view, create, update, and delete tasks directly from the homepage without authentication (authentication and team spaces will be introduced in Assignment 2).
-- **Red Velvet & Warm Cream Design System**: Clean, modern, distraction-free aesthetic with high contrast and smooth micro-interactions.
-- **Automated CI/CD**: GitHub Actions workflow for linting and building on every push.
+```text
+Student ID: QE123456 (Replace with your Student ID)
+Full Name: Le Nguyen Anh Mai
+GitHub Repository URL: https://github.com/lenguyenanhmai05-dotcom/SDN302_Asm
+Deployed Website URL (Vercel): https://sdn-302-asm-git-main-lenguyenanhmais-projects.vercel.app
+Separate Backend URL (NestJS on Render) — write N/A if not used: N/A
+Test Account Email: grader@sdn302.edu.vn
+Test Account Password: Password123!
+This test account is already email-verified / ready to log in immediately, with no confirmation link needed (Yes / No): Yes
+Self-registration works, so a grader can create their own account (Yes / No): Yes
+```
 
 ---
 
-## 🎨 2. Design System & Red Velvet Color Palette
+## 📖 1. Project Overview & What's New in Assignment 2
 
-The interface is custom-styled with a soothing, luxury **Red Velvet Cake & Warm Cream** palette:
+**OrPit v2** extends the application into a full-featured collaborative Task & Team Management workspace:
+- **Authentication**: JWT authentication with `jose` and `bcryptjs` password hashing, backed by secure HTTP-only cookies.
+- **Relational Data Modeling**: Users, Teams, Team Members with roles (`OWNER`, `MEMBER`), and Tasks assigned to team members.
+- **RESTful CRUD APIs**: 15 endpoints covering Auth, Teams, Team Members, and Tasks.
+- **Role-Based Authorization**:
+  - Only team **Owners** can update team details, invite members by email, remove members, or delete teams.
+  - Team members can create tasks and update task details, priority, and assignees.
+  - Tasks can only be deleted by the **Task Creator**, the **Task Assignee**, or the **Team Owner**.
+- **Interactive Kanban Board View**: Drag/cycle tasks across *To Do*, *In Progress*, and *Done* columns.
+- **Multi-Filter & Realtime Search**: Search tasks by keyword and filter simultaneously by Status, Priority, and Assignee.
+- **Grader Quick-Fill Button**: A one-click button on the `/login` page to instantly populate the test grader credentials.
 
-| Color Token | Hex Code | Visual Reference | Usage |
+---
+
+## 🎨 2. Design System: Red Velvet & Warm Cream Palette
+
+The interface features a custom luxury color palette:
+
+| Token | Hex Code | Visual Reference | Usage |
 |:---|:---:|:---:|:---|
-| **Velvet Red** | `#AD3029` | ![#AD3029](https://via.placeholder.com/15/AD3029/000000?text=+) | Primary brand color, CTA buttons, active tabs, form border |
-| **Coral Berry** | `#CD5252` | ![#CD5252](https://via.placeholder.com/15/CD5252/000000?text=+) | High priority badges, hover states, secondary highlights |
-| **Dusty Rose** | `#CC8780` | ![#CC8780](https://via.placeholder.com/15/CC8780/000000?text=+) | Medium priority badges, subtle border accents |
-| **Vanilla Cream** | `#FEEFCD` | ![#FEEFCD](https://via.placeholder.com/15/FEEFCD/000000?text=+) | Stat chips, active pill backgrounds, soft container highlights |
-| **Warm Ivory** | `#FAF7F2` | ![#FAF7F2](https://via.placeholder.com/15/FAF7F2/000000?text=+) | Page background, calm reading canvas |
+| **Velvet Red** | `#AD3029` | ![#AD3029](https://via.placeholder.com/15/AD3029/000000?text=+) | Primary brand color, CTA buttons, active tabs, Owner badges |
+| **Coral Berry** | `#CD5252` | ![#CD5252](https://via.placeholder.com/15/CD5252/000000?text=+) | High priority badges, hover accents |
+| **Dusty Rose** | `#CC8780` | ![#CC8780](https://via.placeholder.com/15/CC8780/000000?text=+) | Medium priority badges, member badges |
+| **Vanilla Cream** | `#FEEFCD` | ![#FEEFCD](https://via.placeholder.com/15/FEEFCD/000000?text=+) | Highlight pills, active filters, stat containers |
+| **Warm Ivory** | `#FAF7F2` | ![#FAF7F2](https://via.placeholder.com/15/FAF7F2/000000?text=+) | Canvas background, card surfaces |
 
 ---
 
 ## 🗄️ 3. Database Schema & ERD (Entity Relationship Diagram)
 
-The database schema is defined in [`prisma/schema.prisma`](./prisma/schema.prisma) and migrated to Supabase PostgreSQL.
+Defined in [`prisma/schema.prisma`](./prisma/schema.prisma) and migrated to Supabase PostgreSQL:
 
 ```mermaid
 erDiagram
     User ||--o{ Team : "owns (TeamOwner)"
     User ||--o{ TeamMember : "has memberships"
     User ||--o{ Task : "assigned to (TaskAssignee)"
-    Team ||--o{ TeamMember : "has members"
-    Team ||--o{ Task : "contains"
+    User ||--o{ Task : "created by (TaskCreator)"
+    Team ||--o{ TeamMember : "contains members"
+    Team ||--o{ Task : "contains tasks"
 
     User {
         string id PK "cuid()"
         string name
         string email UK
-        string password
+        string password "hashed with bcrypt"
         datetime createdAt
     }
 
@@ -64,7 +86,7 @@ erDiagram
         string id PK "cuid()"
         string teamId FK
         string userId FK
-        string role "MEMBER / ADMIN"
+        string role "OWNER / MEMBER"
         datetime joinedAt
     }
 
@@ -77,90 +99,98 @@ erDiagram
         datetime dueDate "optional"
         string teamId FK "optional"
         string assigneeId FK "optional"
+        string creatorId FK "optional"
         datetime createdAt
         datetime updatedAt
     }
 ```
 
-### Table Breakdown:
-- **`users`**: Account management for authentication and team assignments.
-- **`teams`**: Project teams created and owned by a User.
-- **`team_members`**: Join table connecting users to teams with specific roles (`MEMBER`, `ADMIN`).
-- **`tasks`**: Task items with status, priority, due date, and optional relations to `teams` and `users` (unlocked for full collaboration in Assignment 2).
-
 ---
 
-## 🚀 4. API Documentation (Next.js Route Handlers)
+## 🚀 4. RESTful CRUD API Documentation
 
-All API endpoints are implemented with Next.js App Router Route Handlers and backed by Prisma ORM:
+All 15 endpoints are implemented using Next.js App Router Route Handlers:
 
-| Method | Endpoint | Description | Query / Body Parameters |
+| Method | Endpoint | Description | Access / Role Required |
 |:---|:---|:---|:---|
-| **GET** | `/api/tasks` | Retrieve all tasks ordered by `createdAt` desc | `?status=TO_DO&priority=HIGH&search=keyword` |
-| **POST** | `/api/tasks` | Create a new task | `{ title, description?, status?, priority?, dueDate? }` |
-| **PUT** | `/api/tasks/:id` | Update an existing task | `{ title?, description?, status?, priority?, dueDate? }` |
-| **DELETE** | `/api/tasks/:id` | Permanently delete a task | None (Task ID in path) |
+| `POST` | `/api/auth/register` | Register new user with hashed password | Public |
+| `POST` | `/api/auth/login` | Login and set HTTP-only JWT cookie | Public |
+| `POST` | `/api/auth/logout` | Revoke session and clear cookies | Authenticated |
+| `GET` | `/api/auth/me` | Fetch active user profile | Authenticated |
+| `GET` | `/api/teams` | List teams current user belongs to | Authenticated |
+| `POST` | `/api/teams` | Create team (creator is set as Owner) | Authenticated |
+| `GET` | `/api/teams/:id` | Get team details, members, and tasks | Team Member / Owner |
+| `PUT` | `/api/teams/:id` | Update team name & description | Team Owner only |
+| `DELETE` | `/api/teams/:id` | Delete team (cascades to members/tasks) | Team Owner only |
+| `POST` | `/api/teams/:id/members` | Add member by email | Team Owner only |
+| `DELETE` | `/api/teams/:id/members/:userId` | Remove member from team | Owner or Self (Owner cannot be removed) |
+| `GET` | `/api/teams/:id/tasks` | List tasks in team with filters | Team Member / Owner |
+| `POST` | `/api/teams/:id/tasks` | Create task within team | Team Member / Owner |
+| `PUT` | `/api/tasks/:id` | Update task status, priority, assignee | Team Member / Owner |
+| `DELETE` | `/api/tasks/:id` | Delete task | Task Creator, Assignee, or Team Owner |
 
 ---
 
-## 🛠️ 5. Features & Bonus Checklist
+## 🛠️ 5. Self-Assessment Checklist
 
-- [x] **Project Scaffolding**: Next.js App Router + TypeScript + Tailwind CSS.
-- [x] **Clean Architecture**: `app/`, `components/`, `lib/`, `prisma/`.
-- [x] **ESLint & Prettier**: Configured for uniform code formatting.
-- [x] **Environment Variables**: `.env.example` provided; `.env` safely excluded by `.gitignore`.
-- [x] **Prisma & Supabase**: Successfully migrated 4 core tables and seeded sample tasks.
-- [x] **Singleton Prisma Client**: Implemented in [`lib/prisma.ts`](./lib/prisma.ts).
-- [x] **Task CRUD**: Public end-to-end Create, Read, Update, Delete with realtime UI updates without page reloads.
-- [x] **Responsive Layout**: Shared Navbar & Footer with full-width screen responsiveness.
-- [x] **Teams Placeholder**: Minimalist "Coming Soon" page at `/teams`.
-- [x] **Bonus – Client-side Validation**: Required title with friendly error cues.
-- [x] **Bonus – Status Filter & Search**: Interactive filtering by status (All, To Do, In Progress, Done) and priority.
-- [x] **Bonus – CI Workflow**: GitHub Actions workflow at [`.github/workflows/ci.yml`](./.github/workflows/ci.yml).
-- [x] **Bonus – Mermaid ERD**: Interactive database diagram embedded in README.
+- [x] **Authentication & Registration**: Users can register with name, email, password; log in; and log out.
+- [x] **No Email Confirmation Blocker**: Accounts are active immediately; self-registration works for the grader.
+- [x] **Pre-Seeded Test Account**: `grader@sdn302.edu.vn` with password `Password123!`.
+- [x] **Teams Dashboard**: List user's teams with Owner/Member badges and member/task metrics.
+- [x] **Create Team**: User automatically assigned as `OWNER`.
+- [x] **Team Member Management**: Owner can add members by email and remove members.
+- [x] **Task Assignments**: Tasks can be assigned to team members with due dates.
+- [x] **Role-Based Task Authorization**: Tasks can only be deleted by Creator, Assignee, or Owner.
+- [x] **15 RESTful Endpoints**: Full CRUD across Auth, Teams, Members, and Tasks.
+- [x] **Bonus – Kanban Board**: Visual status columns with quick move buttons.
+- [x] **Bonus – Multi-Criteria Filters**: Filter by Status, Priority, and Assignee.
+- [x] **Bonus – Automated Smoke Test**: 15/15 tests passing via `npx tsx scripts/smoke-test-asm2.ts`.
 
 ---
 
-## 💻 6. Local Development Setup
+## 💻 6. Local Setup & Verification
 
-1. **Clone the repository:**
+1. **Clone repository:**
    ```bash
    git clone https://github.com/lenguyenanhmai05-dotcom/SDN302_Asm.git
    cd SDN302_Asm
    ```
 
-2. **Install dependencies:**
+2. **Install packages:**
    ```bash
    npm install
    ```
 
-3. **Configure environment variables:**
-   Create a `.env` file based on `.env.example`:
+3. **Configure `.env`:**
    ```env
-   DATABASE_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
-   DIRECT_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
+   DATABASE_URL="postgresql://...supabase.com:6543/postgres?pgbouncer=true"
+   DIRECT_URL="postgresql://...supabase.com:5432/postgres"
+   JWT_SECRET="your-jwt-secret-min-32-chars"
    ```
 
-4. **Run database migration & seed sample data:**
+4. **Seed database with test accounts & sample teams:**
    ```bash
-   npx prisma migrate dev --name init
    npx prisma db seed
    ```
 
-5. **Start local development server:**
+5. **Run production build:**
    ```bash
-   npm run dev
+   npm run build
    ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+6. **Run automated API smoke tests:**
+   ```bash
+   npx tsx scripts/smoke-test-asm2.ts
+   ```
 
 ---
 
-## 🌐 7. Deployment to Vercel
+## 📄 7. Deliverable Report Document
 
-1. Push your code to GitHub.
-2. Sign in to [Vercel](https://vercel.com) and click **"Add New Project"**.
-3. Import the `SDN302_Asm` repository.
-4. In the **Environment Variables** section, add:
-   - `DATABASE_URL`: Your Supabase transaction pooler URL (Port 6543).
-   - `DIRECT_URL`: Your Supabase direct connection URL (Port 5432).
-5. Click **"Deploy"**. Vercel will run `postinstall: prisma generate` and `next build` automatically.
+The official submission Word report has been compiled and saved as:
+- [`SDN302_Assignment2_Report.docx`](./SDN302_Assignment2_Report.docx)
+
+To re-generate the `.docx` document at any time:
+```bash
+npx tsx scripts/generate-doc-asm2.ts
+```
