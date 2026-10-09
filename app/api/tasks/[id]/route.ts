@@ -9,6 +9,13 @@ export async function PUT(
 ) {
   try {
     const authUser = await getAuthUser(request);
+    if (!authUser) {
+      return NextResponse.json(
+        { error: "Unauthorized: Please log in to update tasks" },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
 
     const task = await prisma.task.findUnique({
@@ -26,12 +33,9 @@ export async function PUT(
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    // If task belongs to a team, user must be authenticated and a team member
+    // Role check:
+    // If task belongs to a team, user must be a member of that team
     if (task.team) {
-      if (!authUser) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-
       const isMember =
         task.team.ownerId === authUser.userId ||
         task.team.members.some((m) => m.userId === authUser.userId);
@@ -42,6 +46,11 @@ export async function PUT(
           { status: 403 }
         );
       }
+    } else if (task.creatorId && task.creatorId !== authUser.userId && task.assigneeId !== authUser.userId) {
+      return NextResponse.json(
+        { error: "Forbidden: You are not authorized to update this task" },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
@@ -100,6 +109,13 @@ export async function DELETE(
 ) {
   try {
     const authUser = await getAuthUser(request);
+    if (!authUser) {
+      return NextResponse.json(
+        { error: "Unauthorized: Please log in to delete tasks" },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
 
     const task = await prisma.task.findUnique({
@@ -115,25 +131,20 @@ export async function DELETE(
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    // If task belongs to a team or has creator/assignee, enforce role-based authorization
-    if (task.team || task.creatorId || task.assigneeId) {
-      if (!authUser) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+    // Role-based authorization:
+    // "Only the task creator, the assignee, or the team Owner can delete a task."
+    const isCreator = Boolean(task.creatorId && task.creatorId === authUser.userId);
+    const isAssignee = Boolean(task.assigneeId && task.assigneeId === authUser.userId);
+    const isOwner = Boolean(task.team && task.team.ownerId === authUser.userId);
 
-      const isCreator = task.creatorId === authUser.userId;
-      const isAssignee = task.assigneeId === authUser.userId;
-      const isOwner = task.team?.ownerId === authUser.userId;
-
-      if (!isCreator && !isAssignee && !isOwner) {
-        return NextResponse.json(
-          {
-            error:
-              "Forbidden: Only the task creator, assignee, or team owner can delete this task",
-          },
-          { status: 403 }
-        );
-      }
+    if (!isCreator && !isAssignee && !isOwner) {
+      return NextResponse.json(
+        {
+          error:
+            "Forbidden: Only the task creator, the assignee, or the team Owner can delete this task",
+        },
+        { status: 403 }
+      );
     }
 
     await prisma.task.delete({

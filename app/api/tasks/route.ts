@@ -50,10 +50,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/tasks - Tạo task mới
+// POST /api/tasks - Tạo task mới (yêu cầu đăng nhập)
 export async function POST(request: NextRequest) {
   try {
     const authUser = await getAuthUser(request);
+    if (!authUser) {
+      return NextResponse.json(
+        { error: "Unauthorized: Please log in to create tasks" },
+        { status: 401 }
+      );
+    }
     const body = await request.json();
     const { title, description, status, priority, dueDate, teamId, assigneeId } = body;
 

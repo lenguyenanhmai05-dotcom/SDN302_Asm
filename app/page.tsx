@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 
 interface TaskItem {
@@ -17,6 +18,7 @@ interface TaskItem {
 
 export default function HomePage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -83,6 +85,12 @@ export default function HomePage() {
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!user) {
+      showToast("Please sign in to create tasks", "error");
+      setTimeout(() => router.push("/login"), 800);
+      return;
+    }
+
     if (!title.trim()) {
       setFormError("Task title is required");
       return;
@@ -140,6 +148,12 @@ export default function HomePage() {
     e.preventDefault();
     if (!editingTask) return;
 
+    if (!user) {
+      showToast("Please sign in to edit tasks", "error");
+      router.push("/login");
+      return;
+    }
+
     if (!editTitle.trim()) {
       setEditError("Title cannot be empty");
       return;
@@ -180,13 +194,22 @@ export default function HomePage() {
   const handleDeleteTask = async () => {
     if (!taskToDelete) return;
 
+    if (!user) {
+      showToast("Please sign in to delete tasks", "error");
+      router.push("/login");
+      return;
+    }
+
     try {
       setSubmitting(true);
       const res = await fetch(`/api/tasks/${taskToDelete.id}`, {
         method: "DELETE",
       });
 
-      if (!res.ok) throw new Error("Delete failed");
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Delete failed");
+      }
 
       setTasks((prev) => prev.filter((t) => t.id !== taskToDelete.id));
       showToast("Task deleted");
@@ -201,6 +224,12 @@ export default function HomePage() {
 
   // Quick toggle task status
   const handleQuickToggleDone = async (task: TaskItem) => {
+    if (!user) {
+      showToast("Please sign in to update tasks", "error");
+      router.push("/login");
+      return;
+    }
+
     const nextStatus = task.status === "DONE" ? "TO_DO" : "DONE";
     try {
       const res = await fetch(`/api/tasks/${task.id}`, {
@@ -212,6 +241,9 @@ export default function HomePage() {
         const updated = await res.json();
         setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         showToast(nextStatus === "DONE" ? "Completed" : "Moved to To Do");
+      } else {
+        const errData = await res.json();
+        showToast(errData.error || "Error updating status", "error");
       }
     } catch {
       showToast("Error updating status", "error");
