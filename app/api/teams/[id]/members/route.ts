@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { createNotification, logActivity } from "@/lib/notifications";
 
-// POST /api/teams/[id]/members - Add a member to a team by email (Owner only)
+// POST /api/teams/[id]/members - Add a member to a team by email (Owner or Admin)
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -23,10 +24,16 @@ export async function POST(
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    // Role check: Only Owner can add members
-    if (team.ownerId !== authUser.userId) {
+    // Role check: Owner or Admin
+    const isOwner = team.ownerId === authUser.userId;
+    const requesterMembership = await prisma.teamMember.findUnique({
+      where: { teamId_userId: { teamId, userId: authUser.userId } },
+    });
+    const isAdmin = requesterMembership?.role === "ADMIN";
+
+    if (!isOwner && !isAdmin) {
       return NextResponse.json(
-        { error: "Forbidden: Only the team owner can add members" },
+        { error: "Forbidden: Only team owners and admins can add members" },
         { status: 403 }
       );
     }
@@ -69,18 +76,38 @@ export async function POST(
       );
     }
 
+    // Target role (Admin can add MEMBER or ADMIN, cannot create another OWNER)
+    const targetRole = role === "ADMIN" ? "ADMIN" : "MEMBER";
+
     // Add member
     const newMember = await prisma.teamMember.create({
       data: {
         teamId,
         userId: targetUser.id,
-        role: role === "OWNER" ? "OWNER" : "MEMBER",
+        role: targetRole,
       },
       include: {
         user: {
           select: { id: true, name: true, email: true },
         },
       },
+    });
+
+    // In-app notification for the newly added member
+    await createNotification({
+      userId: targetUser.id,
+      title: "Added to Team",
+      message: `You have been added to team "${team.name}" as ${targetRole}.`,
+      type: "TEAM_INVITE",
+      link: `/teams/${teamId}`,
+    });
+
+    // Log activity
+    await logActivity({
+      teamId,
+      userId: authUser.userId,
+      action: "MEMBER_ADDED",
+      details: `Added ${targetUser.name} to team as ${targetRole}`,
     });
 
     return NextResponse.json(newMember, { status: 201 });

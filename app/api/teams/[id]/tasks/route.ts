@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { createNotification, logActivity } from "@/lib/notifications";
 
 // GET /api/teams/[id]/tasks - List tasks for a team with search & filter
 export async function GET(
@@ -168,6 +169,25 @@ export async function POST(
           select: { id: true, name: true, email: true },
         },
       },
+    });
+
+    // Notify assignee if assigned to someone else
+    if (assigneeId && assigneeId !== authUser.userId) {
+      await createNotification({
+        userId: assigneeId,
+        title: "New Task Assigned",
+        message: `You were assigned "${newTask.title}" in team "${team.name}".`,
+        type: "TASK_ASSIGNED",
+        link: `/teams/${teamId}`,
+      });
+    }
+
+    // Log activity
+    await logActivity({
+      teamId,
+      userId: authUser.userId,
+      action: "TASK_CREATED",
+      details: `Created task "${newTask.title}"`,
     });
 
     return NextResponse.json(newTask, { status: 201 });

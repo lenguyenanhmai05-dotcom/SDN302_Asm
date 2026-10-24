@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { createNotification, logActivity } from "@/lib/notifications";
 
 // PUT /api/tasks/[id] - Update a task (status, priority, details, assignee)
 export async function PUT(
@@ -23,7 +24,7 @@ export async function PUT(
       include: {
         team: {
           include: {
-            members: { select: { userId: true } },
+            members: { select: { userId: true, role: true } },
           },
         },
       },
@@ -94,6 +95,31 @@ export async function PUT(
       },
     });
 
+    // If a new assignee was assigned, notify them!
+    if (
+      assigneeId &&
+      assigneeId !== task.assigneeId &&
+      assigneeId !== authUser.userId
+    ) {
+      await createNotification({
+        userId: assigneeId,
+        title: "Task Assigned to You",
+        message: `You were assigned the task "${updatedTask.title}".`,
+        type: "TASK_ASSIGNED",
+        link: task.teamId ? `/teams/${task.teamId}` : "/",
+      });
+    }
+
+    // Log activity if belongs to a team
+    if (task.teamId) {
+      await logActivity({
+        teamId: task.teamId,
+        userId: authUser.userId,
+        action: "TASK_UPDATED",
+        details: `Updated task "${updatedTask.title}" (${updatedTask.status})`,
+      });
+    }
+
     return NextResponse.json(updatedTask);
   } catch (error) {
     console.error("PUT /api/tasks/[id] error:", error);
@@ -102,7 +128,7 @@ export async function PUT(
 }
 
 // DELETE /api/tasks/[id] - Delete a task
-// "Only the task creator, the assignee, or the team Owner can delete a task."
+// "Owner, Admin, Task Creator, or Assignee can delete a task."
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -131,17 +157,26 @@ export async function DELETE(
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
+    // Check Admin status in team
+    let isAdmin = false;
+    if (task.teamId) {
+      const membership = await prisma.teamMember.findUnique({
+        where: { teamId_userId: { teamId: task.teamId, userId: authUser.userId } },
+      });
+      isAdmin = membership?.role === "ADMIN";
+    }
+
     // Role-based authorization:
-    // "Only the task creator, the assignee, or the team Owner can delete a task."
+    // "Owner, Admin, Creator, or Assignee can delete a task."
     const isCreator = Boolean(task.creatorId && task.creatorId === authUser.userId);
     const isAssignee = Boolean(task.assigneeId && task.assigneeId === authUser.userId);
     const isOwner = Boolean(task.team && task.team.ownerId === authUser.userId);
 
-    if (!isCreator && !isAssignee && !isOwner) {
+    if (!isCreator && !isAssignee && !isOwner && !isAdmin) {
       return NextResponse.json(
         {
           error:
-            "Forbidden: Only the task creator, the assignee, or the team Owner can delete this task",
+            "Forbidden: Only the task creator, assignee, team owner, or admin can delete this task",
         },
         { status: 403 }
       );
@@ -150,6 +185,16 @@ export async function DELETE(
     await prisma.task.delete({
       where: { id },
     });
+
+    // Log activity if belongs to a team
+    if (task.teamId) {
+      await logActivity({
+        teamId: task.teamId,
+        userId: authUser.userId,
+        action: "TASK_DELETED",
+        details: `Deleted task "${task.title}"`,
+      });
+    }
 
     return NextResponse.json({ success: true, message: "Task deleted successfully" });
   } catch (error) {

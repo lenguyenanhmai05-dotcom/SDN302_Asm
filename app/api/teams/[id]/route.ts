@@ -86,10 +86,16 @@ export async function PUT(
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    // Role check: Owner only
-    if (team.ownerId !== authUser.userId) {
+    // Role check: Owner or Admin
+    const isOwner = team.ownerId === authUser.userId;
+    const requesterMembership = await prisma.teamMember.findUnique({
+      where: { teamId_userId: { teamId: id, userId: authUser.userId } },
+    });
+    const isAdmin = requesterMembership?.role === "ADMIN";
+
+    if (!isOwner && !isAdmin) {
       return NextResponse.json(
-        { error: "Forbidden: Only the team owner can update team details" },
+        { error: "Forbidden: Only team owners and admins can update team details" },
         { status: 403 }
       );
     }

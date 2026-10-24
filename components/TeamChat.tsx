@@ -1,0 +1,326 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { useAuth } from "./AuthProvider";
+
+interface ChatSender {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface ChatMessageItem {
+  id: string;
+  teamId: string;
+  senderId: string;
+  content: string;
+  createdAt: string;
+  sender: ChatSender;
+}
+
+export default function TeamChat({
+  teamId,
+  teamName,
+  isOpen,
+  onClose,
+}: {
+  teamId: string;
+  teamName: string;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<ChatMessageItem[]>([]);
+  const [inputText, setInputText] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState<{ id: string; name: string }[]>([]);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // 1. Fetch initial message history
+  useEffect(() => {
+    let isMounted = true;
+    async function loadMessages() {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/teams/${teamId}/messages`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) setMessages(data);
+        }
+      } catch (err) {
+        console.error("Failed to load chat history:", err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+          setTimeout(scrollToBottom, 150);
+        }
+      }
+    }
+
+    if (isOpen) {
+      loadMessages();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [teamId, isOpen]);
+
+  // 2. Setup Supabase Realtime channel for chat & presence
+  useEffect(() => {
+    if (!user || !isOpen) return;
+
+    const supabase = getSupabaseBrowserClient();
+    const channelName = `team-chat:${teamId}`;
+    const channel = supabase.channel(channelName, {
+      config: {
+        presence: { key: user.id },
+      },
+    });
+
+    // Listen for incoming broadcast messages
+    channel
+      .on("broadcast", { event: "new_message" }, ({ payload }) => {
+        if (payload && payload.id) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === payload.id)) return prev;
+            return [...prev, payload];
+          });
+          setTimeout(scrollToBottom, 80);
+        }
+      })
+      // Listen for typing indicator
+      .on("broadcast", { event: "typing" }, ({ payload }) => {
+        if (payload?.userName && payload.userId !== user.id) {
+          setTypingUsers((prev) => {
+            if (!prev.includes(payload.userName)) return [...prev, payload.userName];
+            return prev;
+          });
+          setTimeout(() => {
+            setTypingUsers((prev) => prev.filter((name) => name !== payload.userName));
+          }, 3000);
+        }
+      })
+      // Track Presence (Online members)
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const usersOnline: { id: string; name: string }[] = [];
+        Object.keys(state).forEach((key) => {
+          const presences = state[key] as any[];
+          presences.forEach((p) => {
+            if (p.name && !usersOnline.some((u) => u.id === key)) {
+              usersOnline.push({ id: key, name: p.name });
+            }
+          });
+        });
+        setOnlineUsers(usersOnline);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.track({
+            name: user.name,
+            email: user.email,
+            onlineAt: new Date().toISOString(),
+          });
+        }
+      });
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [teamId, user, isOpen]);
+
+  // Handle typing broadcast
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputText(e.target.value);
+
+    if (!user) return;
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      try {
+        const supabase = getSupabaseBrowserClient();
+        const channel = supabase.channel(`team-chat:${teamId}`);
+        channel.send({
+          type: "broadcast",
+          event: "typing",
+          payload: { userId: user.id, userName: user.name },
+        });
+      } catch {}
+    }, 300);
+  };
+
+  // Send message
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputText.trim() || sending || !user) return;
+
+    const messageText = inputText.trim();
+    setInputText("");
+
+    try {
+      setSending(true);
+      const res = await fetch(`/api/teams/${teamId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: messageText }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to send message");
+      }
+
+      const createdMsg: ChatMessageItem = await res.json();
+
+      // Add to local state immediately
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === createdMsg.id)) return prev;
+        return [...prev, createdMsg];
+      });
+      setTimeout(scrollToBottom, 50);
+
+      // Broadcast to other members in the team room
+      const supabase = getSupabaseBrowserClient();
+      const channel = supabase.channel(`team-chat:${teamId}`);
+      await channel.send({
+        type: "broadcast",
+        event: "new_message",
+        payload: createdMsg,
+      });
+    } catch (err) {
+      console.error(err);
+      setInputText(messageText); // restore on failure
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl border-l border-[rgba(173,48,41,0.15)] animate-in slide-in-from-right duration-200">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-[rgba(173,48,41,0.1)] px-5 py-4 bg-[#FAF7F2]">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[#AD3029] to-[#CD5252] text-white shadow-xs">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-[#221514]">{teamName} Chat</h3>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-[10px] text-[#7A6664]">
+                {onlineUsers.length} online now
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 cursor-pointer transition-colors"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Message List */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-gradient-to-b from-white to-[#FAF7F2]/30">
+        {loading ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#AD3029]/20 border-t-[#AD3029]" />
+              <p className="text-xs text-[#7A6664]">Loading messages...</p>
+            </div>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center text-center p-6 text-gray-400">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FEEFCD]/50 text-xl mb-2 text-[#8F2520]">
+              💬
+            </div>
+            <p className="text-xs font-semibold text-[#55403E]">Welcome to Team Chat!</p>
+            <p className="text-[11px] text-[#7A6664] mt-1">
+              Send the first message to start collaborating in real time with your team.
+            </p>
+          </div>
+        ) : (
+          messages.map((m) => {
+            const isMe = user?.id === m.senderId;
+            return (
+              <div
+                key={m.id}
+                className={`flex flex-col ${isMe ? "items-end" : "items-start"} space-y-1 animate-in fade-in duration-150`}
+              >
+                {!isMe && (
+                  <span className="text-[10px] font-bold text-[#7A6664] px-1">
+                    {m.sender.name}
+                  </span>
+                )}
+                <div
+                  className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed shadow-2xs ${
+                    isMe
+                      ? "bg-[#AD3029] text-white rounded-tr-xs"
+                      : "bg-[#FAF7F2] text-[#221514] border border-[rgba(173,48,41,0.1)] rounded-tl-xs"
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                </div>
+                <span className="text-[9px] text-[#7A6664] px-1">
+                  {new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+            );
+          })
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Typing Indicator */}
+      {typingUsers.length > 0 && (
+        <div className="px-4 py-1 text-[10px] italic text-[#AD3029] bg-[#FAF7F2]/50 animate-pulse">
+          ✍️ {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
+        </div>
+      )}
+
+      {/* Input Form */}
+      <form onSubmit={handleSendMessage} className="p-3 border-t border-[rgba(173,48,41,0.1)] bg-white">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={inputText}
+            onChange={handleInputChange}
+            placeholder="Type a message to team..."
+            disabled={sending}
+            className="flex-1 rounded-xl border border-[rgba(173,48,41,0.2)] bg-[#FAF7F2]/40 px-3.5 py-2.5 text-xs text-[#221514] placeholder-gray-400 focus:border-[#AD3029] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#AD3029]/20"
+          />
+          <button
+            type="submit"
+            disabled={!inputText.trim() || sending}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#AD3029] text-white shadow-xs hover:bg-[#8F2520] transition-all disabled:opacity-50 cursor-pointer"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

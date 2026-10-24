@@ -9,32 +9,37 @@ datasource db {
 }
 
 model User {
-  id            String       @id @default(cuid())
+  id            String         @id @default(cuid())
   name          String
-  email         String       @unique
+  email         String         @unique
   password      String
-  createdAt     DateTime     @default(now())
+  createdAt     DateTime       @default(now())
 
   // Relations
-  ownedTeams    Team[]       @relation("TeamOwner")
+  ownedTeams    Team[]         @relation("TeamOwner")
   memberships   TeamMember[]
-  assignedTasks Task[]       @relation("TaskAssignee")
-  createdTasks  Task[]       @relation("TaskCreator")
+  assignedTasks Task[]         @relation("TaskAssignee")
+  createdTasks  Task[]         @relation("TaskCreator")
+  chatMessages  ChatMessage[]
+  notifications Notification[]
+  activityLogs  ActivityLog[]
 
   @@map("users")
 }
 
 model Team {
-  id          String       @id @default(cuid())
+  id          String        @id @default(cuid())
   name        String
   description String?
   ownerId     String
-  owner       User         @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  createdAt   DateTime     @default(now())
+  owner       User          @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
 
   // Relations
-  members     TeamMember[]
-  tasks       Task[]
+  members      TeamMember[]
+  tasks        Task[]
+  chatMessages ChatMessage[]
+  activityLogs ActivityLog[]
 
   @@map("teams")
 }
@@ -45,7 +50,7 @@ model TeamMember {
   team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   userId   String
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role     String   @default("MEMBER")
+  role     String   @default("MEMBER") // OWNER, ADMIN, MEMBER
   joinedAt DateTime @default(now())
 
   @@unique([teamId, userId])
@@ -69,4 +74,46 @@ model Task {
   updatedAt   DateTime  @updatedAt
 
   @@map("tasks")
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([teamId, createdAt])
+  @@map("chat_messages")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("INFO") // TASK_ASSIGNED, TEAM_INVITE, ROLE_CHANGED, CHAT_MENTION
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String   // TASK_CREATED, TASK_UPDATED, TASK_DELETED, MEMBER_ADDED, MEMBER_REMOVED, ROLE_UPDATED
+  details   String?
+  createdAt DateTime @default(now())
+
+  @@index([teamId, createdAt])
+  @@map("activity_logs")
 }

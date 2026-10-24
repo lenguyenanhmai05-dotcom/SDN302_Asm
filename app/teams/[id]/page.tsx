@@ -4,6 +4,9 @@ import { use, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import TeamChat from "@/components/TeamChat";
+import TeamActivities from "@/components/TeamActivities";
 
 interface UserSummary {
   id: string;
@@ -64,6 +67,11 @@ export default function TeamDetailPage({
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [priorityFilter, setPriorityFilter] = useState("ALL");
   const [assigneeFilter, setAssigneeFilter] = useState("ALL");
+
+  // Chat & Activities Drawers
+  const [showChat, setShowChat] = useState(false);
+  const [showActivities, setShowActivities] = useState(false);
+  const [updatingRoleUserId, setUpdatingRoleUserId] = useState<string | null>(null);
 
   // Add Member Modal
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
@@ -156,6 +164,94 @@ export default function TeamDetailPage({
   }, [authLoading, user, teamId]);
 
   const isOwner = Boolean(user && team && team.ownerId === user.id);
+  const currentMember = team?.members.find((m) => m.user.id === user?.id);
+  const isAdmin = currentMember?.role === "ADMIN";
+  const canManageMembers = isOwner || isAdmin;
+  const canDeleteTeam = isOwner;
+  const canEditTeam = isOwner || isAdmin;
+
+  // Real-time task board broadcast helper
+  const broadcastTaskEvent = async (
+    action: "create" | "update" | "delete",
+    task?: any,
+    taskId?: string
+  ) => {
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const channel = supabase.channel(`team-tasks:${teamId}`);
+      await channel.send({
+        type: "broadcast",
+        event: "task_event",
+        payload: { action, task, taskId, senderId: user?.id },
+      });
+    } catch {}
+  };
+
+  // Real-time task board subscription across all connected users
+  useEffect(() => {
+    if (!teamId || !user) return;
+    const supabase = getSupabaseBrowserClient();
+    const channel = supabase.channel(`team-tasks:${teamId}`);
+
+    channel
+      .on("broadcast", { event: "task_event" }, ({ payload }) => {
+        if (!payload || payload.senderId === user.id) return;
+        const { action, task, taskId } = payload;
+        if (action === "create" && task) {
+          setTeam((prev) => {
+            if (!prev || prev.tasks.some((t) => t.id === task.id)) return prev;
+            return { ...prev, tasks: [task, ...prev.tasks] };
+          });
+          showToast(`⚡ Real-time: New task "${task.title}" added`);
+        } else if (action === "update" && task) {
+          setTeam((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              tasks: prev.tasks.map((t) => (t.id === task.id ? task : t)),
+            };
+          });
+          showToast(`⚡ Real-time: Task "${task.title}" updated`);
+        } else if (action === "delete" && taskId) {
+          setTeam((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              tasks: prev.tasks.filter((t) => t.id !== taskId),
+            };
+          });
+          showToast("⚡ Real-time: A task was deleted");
+        }
+      })
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [teamId, user]);
+
+  // Update Member Role
+  const handleUpdateMemberRole = async (targetUserId: string, newRole: string) => {
+    try {
+      setUpdatingRoleUserId(targetUserId);
+      const res = await fetch(`/api/teams/${teamId}/members/${targetUserId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || "Failed to update member role", "error");
+        return;
+      }
+      showToast(`Role updated to ${newRole}`);
+      fetchTeamDetails();
+    } catch {
+      showToast("Error updating member role", "error");
+    } finally {
+      setUpdatingRoleUserId(null);
+    }
+  };
 
   // Add Member
   const handleAddMember = async (e: React.FormEvent) => {
@@ -304,6 +400,7 @@ export default function TeamDetailPage({
         return;
       }
 
+      broadcastTaskEvent("create", data);
       setTaskTitle("");
       setTaskDesc("");
       setTaskStatus("TO_DO");
@@ -365,6 +462,7 @@ export default function TeamDetailPage({
         return;
       }
 
+      broadcastTaskEvent("update", data);
       setEditingTask(null);
       showToast("Task updated successfully!");
       fetchTeamDetails();
@@ -384,12 +482,13 @@ export default function TeamDetailPage({
         body: JSON.stringify({ status: newStatus }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         showToast(data.error || "Failed to update task status", "error");
         return;
       }
 
+      broadcastTaskEvent("update", data);
       showToast("Status updated");
       fetchTeamDetails();
     } catch {
@@ -413,6 +512,7 @@ export default function TeamDetailPage({
         return;
       }
 
+      broadcastTaskEvent("delete", undefined, taskToDelete.id);
       setTaskToDelete(null);
       showToast("Task deleted successfully");
       fetchTeamDetails();
@@ -424,10 +524,10 @@ export default function TeamDetailPage({
   };
 
   // Check if current user can delete task:
-  // "Only the task creator, the assignee, or the team Owner can delete a task."
+  // Owner & Admin can delete any task; Members can delete tasks they created or were assigned to
   const canDeleteTask = (task: TaskItem) => {
     if (!user) return false;
-    if (isOwner) return true;
+    if (isOwner || isAdmin) return true;
     if (task.creator && task.creator.id === user.id) return true;
     if (task.assignee && task.assignee.id === user.id) return true;
     return false;
@@ -535,10 +635,12 @@ export default function TeamDetailPage({
                 className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
                   isOwner
                     ? "bg-[#AD3029] text-white"
-                    : "bg-[#FEEFCD] text-[#8F2520]"
+                    : isAdmin
+                    ? "bg-[#FEEFCD] text-[#8F2520] border border-[#AD3029]/30"
+                    : "bg-white text-[#7A6664] border border-gray-200"
                 }`}
               >
-                {isOwner ? "👑 Team Owner" : "👤 Team Member"}
+                {isOwner ? "👑 Team Owner" : isAdmin ? "⭐ Team Admin" : "👤 Team Member"}
               </span>
             </div>
 
@@ -559,21 +661,40 @@ export default function TeamDetailPage({
 
           {/* Team Actions */}
           <div className="flex flex-wrap items-center gap-2.5">
-            {isOwner && (
-              <>
-                <button
-                  onClick={() => setShowEditTeamModal(true)}
-                  className="rounded-xl border border-[rgba(173,48,41,0.2)] bg-white px-3.5 py-2 text-xs font-semibold text-[#AD3029] hover:bg-[#FEEFCD]/40 cursor-pointer"
-                >
-                  Edit Team
-                </button>
-                <button
-                  onClick={() => setShowDeleteTeamModal(true)}
-                  className="rounded-xl border border-red-200 bg-white px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 cursor-pointer"
-                >
-                  Delete Team
-                </button>
-              </>
+            {/* Real-time Team Chat Button */}
+            <button
+              onClick={() => setShowChat(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[rgba(173,48,41,0.2)] bg-white px-3.5 py-2 text-xs font-semibold text-[#AD3029] hover:bg-[#FEEFCD]/40 cursor-pointer shadow-2xs transition-colors"
+            >
+              <span>💬</span>
+              <span>Team Chat</span>
+            </button>
+
+            {/* Audit Log / Activities Button */}
+            <button
+              onClick={() => setShowActivities(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-[#55403E] hover:bg-gray-50 cursor-pointer shadow-2xs transition-colors"
+            >
+              <span>📜</span>
+              <span>Activity Log</span>
+            </button>
+
+            {canEditTeam && (
+              <button
+                onClick={() => setShowEditTeamModal(true)}
+                className="rounded-xl border border-[rgba(173,48,41,0.2)] bg-white px-3.5 py-2 text-xs font-semibold text-[#AD3029] hover:bg-[#FEEFCD]/40 cursor-pointer"
+              >
+                Edit Team
+              </button>
+            )}
+
+            {canDeleteTeam && (
+              <button
+                onClick={() => setShowDeleteTeamModal(true)}
+                className="rounded-xl border border-red-200 bg-white px-3.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 cursor-pointer"
+              >
+                Delete Team
+              </button>
             )}
 
             <button
@@ -600,7 +721,7 @@ export default function TeamDetailPage({
               </span>
             </div>
 
-            {isOwner && (
+            {canManageMembers && (
               <button
                 onClick={() => setShowAddMemberModal(true)}
                 className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-xl bg-[#FEEFCD] px-3 py-1.5 text-xs font-bold text-[#8F2520] hover:bg-[#AD3029] hover:text-white transition-all cursor-pointer"
@@ -614,7 +735,10 @@ export default function TeamDetailPage({
           <div className="flex flex-wrap gap-2.5">
             {team.members.map((m) => {
               const isMemberOwner = m.role === "OWNER" || m.user.id === team.ownerId;
+              const isMemberAdmin = m.role === "ADMIN";
               const isCurrentUser = user && user.id === m.user.id;
+              const canModifyRole = (isOwner && !isMemberOwner) || (isAdmin && !isMemberOwner && !isMemberAdmin);
+              const canRemove = (isOwner && !isMemberOwner) || (isAdmin && !isMemberOwner && !isMemberAdmin);
 
               return (
                 <div
@@ -634,18 +758,33 @@ export default function TeamDetailPage({
                     </span>
                   </div>
 
-                  <span
-                    className={`ml-1 rounded px-1.5 py-0.5 text-[9px] font-bold ${
-                      isMemberOwner
-                        ? "bg-[#AD3029] text-white"
-                        : "bg-white text-[#7A6664] border border-gray-200"
-                    }`}
-                  >
-                    {isMemberOwner ? "Owner" : "Member"}
-                  </span>
+                  {canModifyRole ? (
+                    <select
+                      value={m.role}
+                      disabled={updatingRoleUserId === m.user.id}
+                      onChange={(e) => handleUpdateMemberRole(m.user.id, e.target.value)}
+                      title="Change member role"
+                      className="rounded-lg border border-[rgba(173,48,41,0.2)] bg-white px-1.5 py-0.5 text-[10px] font-semibold text-[#8F2520] focus:outline-none cursor-pointer"
+                    >
+                      <option value="MEMBER">👤 Member</option>
+                      <option value="ADMIN">⭐ Admin</option>
+                    </select>
+                  ) : (
+                    <span
+                      className={`ml-1 rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                        isMemberOwner
+                          ? "bg-[#AD3029] text-white"
+                          : isMemberAdmin
+                          ? "bg-[#FEEFCD] text-[#8F2520] border border-[#AD3029]/30"
+                          : "bg-white text-[#7A6664] border border-gray-200"
+                      }`}
+                    >
+                      {isMemberOwner ? "👑 Owner" : isMemberAdmin ? "⭐ Admin" : "👤 Member"}
+                    </span>
+                  )}
 
-                  {/* Remove Member button (Owner only, cannot remove owner) */}
-                  {isOwner && !isMemberOwner && (
+                  {/* Remove Member button (Owner can remove any non-owner; Admin can remove regular members) */}
+                  {canRemove && (
                     <button
                       onClick={() => handleRemoveMember(m.user.id, m.user.name)}
                       title="Remove member from team"
@@ -1272,10 +1411,10 @@ export default function TeamDetailPage({
                 <select
                   value={newMemberRole}
                   onChange={(e) => setNewMemberRole(e.target.value)}
-                  className="mt-1.5 block w-full rounded-xl border border-[rgba(173,48,41,0.2)] bg-white px-3 py-2 text-xs text-[#221514] focus:border-[#AD3029] focus:outline-none"
+                  className="mt-1.5 block w-full rounded-xl border border-[rgba(173,48,41,0.2)] bg-white px-3 py-2 text-xs text-[#221514] focus:border-[#AD3029] focus:outline-none cursor-pointer"
                 >
-                  <option value="MEMBER">Member (Can create & update tasks)</option>
-                  <option value="OWNER">Co-Owner (Full team management)</option>
+                  <option value="MEMBER">👤 Member (Can create & manage own tasks)</option>
+                  <option value="ADMIN">⭐ Admin (Can manage members & all tasks)</option>
                 </select>
               </div>
 
@@ -1388,6 +1527,22 @@ export default function TeamDetailPage({
           </div>
         </div>
       )}
+
+      {/* Team Realtime Chat Drawer */}
+      <TeamChat
+        teamId={teamId}
+        teamName={team.name}
+        isOpen={showChat}
+        onClose={() => setShowChat(false)}
+      />
+
+      {/* Team Activity Audit Log Drawer */}
+      <TeamActivities
+        teamId={teamId}
+        teamName={team.name}
+        isOpen={showActivities}
+        onClose={() => setShowActivities(false)}
+      />
     </div>
   );
 }

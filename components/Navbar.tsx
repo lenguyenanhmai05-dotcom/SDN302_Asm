@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "./AuthProvider";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -75,6 +76,8 @@ export default function Navbar() {
             {/* Auth Actions */}
             {!loading && user ? (
               <div className="flex items-center gap-2 sm:gap-3">
+                <NotificationBell />
+
                 <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-xl bg-white border border-[rgba(173,48,41,0.12)] shadow-2xs">
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FEEFCD] text-xs font-bold text-[#8F2520]">
                     {user.name.charAt(0).toUpperCase()}
