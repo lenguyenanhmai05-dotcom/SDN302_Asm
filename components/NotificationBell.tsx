@@ -23,15 +23,30 @@ export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [browserPermission, setBrowserPermission] = useState<string>("default");
+  const [pushEnabled, setPushEnabled] = useState<boolean>(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const prevUnreadRef = useRef<number>(0);
 
   // Check browser notification support & permission
   useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      setBrowserPermission(Notification.permission);
+    if (typeof window !== "undefined") {
+      if ("Notification" in window) {
+        setBrowserPermission(Notification.permission);
+      }
+      const saved = localStorage.getItem("browser_push_enabled");
+      if (saved !== null) {
+        setPushEnabled(saved === "true");
+      }
     }
   }, []);
+
+  const togglePushNotifications = () => {
+    const nextVal = !pushEnabled;
+    setPushEnabled(nextVal);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("browser_push_enabled", String(nextVal));
+    }
+  };
 
   const requestBrowserPermission = async () => {
     if (typeof window === "undefined" || !("Notification" in window)) {
@@ -60,9 +75,10 @@ export default function NotificationBell() {
         const data = await res.json();
         const newUnread = data.unreadCount || 0;
 
-        // Trigger native browser notification if unread count increased and permission granted
+        // Trigger native browser notification if unread count increased, push is enabled, and permission granted
         if (
           newUnread > prevUnreadRef.current &&
+          pushEnabled &&
           typeof window !== "undefined" &&
           "Notification" in window &&
           Notification.permission === "granted" &&
@@ -202,9 +218,27 @@ export default function NotificationBell() {
                 Bật ngay
               </button>
             </div>
-          ) : (
+          ) : pushEnabled ? (
             <div className="flex items-center justify-between border-b border-emerald-100 bg-emerald-50/70 px-3 py-1.5 text-[10px] text-emerald-800 rounded-xl my-1.5">
-              <span>✅ Thông báo đẩy trình duyệt: <strong>Đang hoạt động</strong></span>
+              <span>✅ Thông báo đẩy: <strong>Đang bật</strong></span>
+              <button
+                onClick={togglePushNotifications}
+                title="Tắt thông báo đẩy trình duyệt"
+                className="rounded-md border border-emerald-300 bg-white px-2 py-0.5 text-[10px] font-semibold text-emerald-700 hover:bg-emerald-100/50 transition-colors cursor-pointer"
+              >
+                Tắt
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-3 py-1.5 text-[10px] text-gray-600 rounded-xl my-1.5">
+              <span>🔕 Thông báo đẩy: <strong>Đang tắt</strong></span>
+              <button
+                onClick={togglePushNotifications}
+                title="Bật lại thông báo đẩy trình duyệt"
+                className="rounded-md bg-[#AD3029] px-2 py-0.5 text-[10px] font-semibold text-white hover:bg-[#8F2520] transition-colors cursor-pointer"
+              >
+                Bật lại
+              </button>
             </div>
           )}
 

@@ -108,9 +108,11 @@ export default function TeamChat({
           });
           setTimeout(scrollToBottom, 80);
 
-          // Trigger native browser notification if user is in another tab or drawer is not active
+          // Trigger native browser notification if user is in another tab or drawer is not active, and push is enabled
+          const isPushEnabled = typeof window !== "undefined" && localStorage.getItem("browser_push_enabled") !== "false";
           if (
             payload.senderId !== user.id &&
+            isPushEnabled &&
             typeof window !== "undefined" &&
             "Notification" in window &&
             Notification.permission === "granted"
