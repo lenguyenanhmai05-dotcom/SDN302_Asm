@@ -23,6 +23,84 @@ export interface ChatMessageItem {
   sender: ChatSender;
 }
 
+// Compress image on client-side before sending to stay well under Supabase Realtime 250KB limit
+function compressImageFile(file: File): Promise<{ dataUrl: string; size: number; name: string; type: string }> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve({
+          dataUrl: reader.result as string,
+          size: file.size,
+          name: file.name,
+          type: file.type,
+        });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX_DIM = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_DIM || height > MAX_DIM) {
+          if (width > height) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          } else {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve({
+            dataUrl: e.target?.result as string,
+            size: file.size,
+            name: file.name,
+            type: file.type,
+          });
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        // 0.78 JPEG compression reduces screenshots from 2MB to ~50-80KB, well under 250KB WebSocket limit
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.78);
+        const approxSize = Math.round((compressedDataUrl.length * 3) / 4);
+        const newName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+
+        resolve({
+          dataUrl: compressedDataUrl,
+          size: approxSize,
+          name: newName,
+          type: "image/jpeg",
+        });
+      };
+      img.onerror = () => {
+        resolve({
+          dataUrl: e.target?.result as string,
+          size: file.size,
+          name: file.name,
+          type: file.type,
+        });
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function TeamChat({
   teamId,
   teamName,
@@ -39,6 +117,7 @@ export default function TeamChat({
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [compressing, setCompressing] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<{ id: string; name: string }[]>([]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [attachment, setAttachment] = useState<{
@@ -57,37 +136,51 @@ export default function TeamChat({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // 1. Fetch initial message history
-  useEffect(() => {
-    let isMounted = true;
-    async function loadMessages() {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/teams/${teamId}/messages`);
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted) setMessages(data);
-        }
-      } catch (err) {
-        console.error("Failed to load chat history:", err);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-          setTimeout(scrollToBottom, 150);
-        }
+  // Reusable message fetcher
+  const fetchMessages = async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      const res = await fetch(`/api/teams/${teamId}/messages`);
+      if (res.ok) {
+        const data: ChatMessageItem[] = await res.json();
+        setMessages((prev) => {
+          if (silent) {
+            // If message list hasn't changed or has pending file details, update seamlessly
+            if (data.length === prev.length) {
+              const hasDiff = prev.some((p, i) => !p.fileUrl && data[i]?.fileUrl);
+              if (!hasDiff) return prev;
+            }
+          }
+          return data;
+        });
+      }
+    } catch (err) {
+      console.error("Failed to load chat history:", err);
+    } finally {
+      if (!silent) {
+        setLoading(false);
+        setTimeout(scrollToBottom, 150);
       }
     }
+  };
 
+  // 1. Fetch initial message history on open
+  useEffect(() => {
     if (isOpen) {
-      loadMessages();
+      fetchMessages(false);
     }
-
-    return () => {
-      isMounted = false;
-    };
   }, [teamId, isOpen]);
 
-  // 2. Setup Supabase Realtime channel for chat & presence
+  // 2. Active sync interval (every 4 seconds) to ensure tabs stay perfectly in sync even if backgrounded
+  useEffect(() => {
+    if (!isOpen) return;
+    const interval = setInterval(() => {
+      fetchMessages(true);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isOpen, teamId]);
+
+  // 3. Setup Supabase Realtime channel for chat & presence
   useEffect(() => {
     if (!user || !isOpen) return;
 
@@ -103,10 +196,15 @@ export default function TeamChat({
     channel
       .on("broadcast", { event: "new_message" }, ({ payload }) => {
         if (payload && payload.id) {
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === payload.id)) return prev;
-            return [...prev, payload];
-          });
+          if (payload.hasLargeAttachment) {
+            // Large attachment fallback: immediately trigger background fetch to get full image from database
+            fetchMessages(true);
+          } else {
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === payload.id)) return prev;
+              return [...prev, payload];
+            });
+          }
           setTimeout(scrollToBottom, 80);
 
           // Trigger native browser notification if user is in another tab or drawer is not active, and push is enabled
@@ -188,30 +286,37 @@ export default function TeamChat({
     }, 300);
   };
 
-  // Handle file / image selection
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle file / image selection with client-side compression
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Limit to 3MB
-    if (file.size > 3 * 1024 * 1024) {
-      alert("Kích thước tệp vượt quá 3MB. Vui lòng chọn tệp nhỏ hơn.");
+    // Limit to 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Kích thước tệp vượt quá 5MB. Vui lòng chọn tệp nhỏ hơn.");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setAttachment({
-        dataUrl: reader.result as string,
-        name: file.name,
-        type: file.type,
-        size: file.size,
-      });
-    };
-    reader.readAsDataURL(file);
-
-    // Reset input value so the same file can be picked again if desired
-    e.target.value = "";
+    try {
+      setCompressing(true);
+      const compressed = await compressImageFile(file);
+      setAttachment(compressed);
+    } catch (err) {
+      console.error("Lỗi xử lý file:", err);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAttachment({
+          dataUrl: reader.result as string,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+        });
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setCompressing(false);
+      e.target.value = "";
+    }
   };
 
   // Send message
@@ -254,11 +359,26 @@ export default function TeamChat({
       // Broadcast to other members in the team room
       const supabase = getSupabaseBrowserClient();
       const channel = supabase.channel(`team-chat:${teamId}`);
-      await channel.send({
-        type: "broadcast",
-        event: "new_message",
-        payload: createdMsg,
-      });
+
+      const payloadString = JSON.stringify(createdMsg);
+      // Supabase Realtime WebSocket limit is ~250KB. If payload > 140KB, broadcast fallback to trigger receiver fetch
+      if (payloadString.length > 140000) {
+        await channel.send({
+          type: "broadcast",
+          event: "new_message",
+          payload: {
+            ...createdMsg,
+            fileUrl: null,
+            hasLargeAttachment: true,
+          },
+        });
+      } else {
+        await channel.send({
+          type: "broadcast",
+          event: "new_message",
+          payload: createdMsg,
+        });
+      }
     } catch (err) {
       console.error(err);
       setInputText(messageText); // restore on failure
@@ -411,6 +531,14 @@ export default function TeamChat({
 
       {/* Input Form with Attachment Support */}
       <form onSubmit={handleSendMessage} className="p-3 border-t border-[rgba(173,48,41,0.1)] bg-white">
+        {/* Compressing indicator */}
+        {compressing && (
+          <div className="mb-2 flex items-center gap-2 rounded-xl border border-[rgba(173,48,41,0.2)] bg-[#FAF7F2] p-2 text-xs text-[#AD3029] animate-pulse">
+            <span className="animate-spin text-sm">⏳</span>
+            <span className="font-medium text-[11px]">Đang tối ưu dung lượng ảnh...</span>
+          </div>
+        )}
+
         {/* Attachment preview chip */}
         {attachment && (
           <div className="mb-2 flex items-center justify-between rounded-xl border border-[rgba(173,48,41,0.2)] bg-[#FAF7F2] p-2 text-xs animate-in fade-in duration-150">
