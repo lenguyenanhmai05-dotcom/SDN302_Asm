@@ -83,6 +83,10 @@ model ChatMessage {
   senderId  String
   sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
   content   String
+  fileUrl   String?
+  fileName  String?
+  fileType  String?
+  fileSize  Int?
   createdAt DateTime @default(now())
 
   @@index([teamId, createdAt])

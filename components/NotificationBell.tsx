@@ -22,7 +22,35 @@ export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [browserPermission, setBrowserPermission] = useState<string>("default");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const prevUnreadRef = useRef<number>(0);
+
+  // Check browser notification support & permission
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setBrowserPermission(Notification.permission);
+    }
+  }, []);
+
+  const requestBrowserPermission = async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      alert("Trình duyệt này không hỗ trợ Web Push Notifications.");
+      return;
+    }
+    try {
+      const perm = await Notification.requestPermission();
+      setBrowserPermission(perm);
+      if (perm === "granted") {
+        new Notification("OrPit Workspace", {
+          body: "Đã bật thông báo đẩy trình duyệt thành công! Bạn sẽ nhận thông báo khi có nhiệm vụ mới.",
+          icon: "/favicon.ico",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchNotifications = async () => {
     if (!user) return;
@@ -30,8 +58,28 @@ export default function NotificationBell() {
       const res = await fetch("/api/notifications");
       if (res.ok) {
         const data = await res.json();
+        const newUnread = data.unreadCount || 0;
+
+        // Trigger native browser notification if unread count increased and permission granted
+        if (
+          newUnread > prevUnreadRef.current &&
+          typeof window !== "undefined" &&
+          "Notification" in window &&
+          Notification.permission === "granted" &&
+          data.notifications?.[0]
+        ) {
+          const topNotif = data.notifications[0];
+          try {
+            new Notification(topNotif.title, {
+              body: topNotif.message,
+              icon: "/favicon.ico",
+            });
+          } catch {}
+        }
+
+        prevUnreadRef.current = newUnread;
         setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
+        setUnreadCount(newUnread);
       }
     } catch (err) {
       console.error("Failed to load notifications:", err);
@@ -140,6 +188,25 @@ export default function NotificationBell() {
               </button>
             )}
           </div>
+
+          {/* Browser Push Permission Banner */}
+          {browserPermission !== "granted" ? (
+            <div className="flex items-center justify-between border-b border-[rgba(173,48,41,0.08)] bg-[#FEEFCD]/40 px-3 py-2 text-[11px] rounded-xl my-1.5">
+              <span className="text-[#8F2520] font-medium text-[10px]">
+                🔔 Bật thông báo đẩy góc màn hình:
+              </span>
+              <button
+                onClick={requestBrowserPermission}
+                className="rounded-lg bg-[#AD3029] px-2 py-0.5 text-[10px] font-bold text-white shadow-2xs hover:bg-[#8F2520] transition-colors cursor-pointer"
+              >
+                Bật ngay
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between border-b border-emerald-100 bg-emerald-50/70 px-3 py-1.5 text-[10px] text-emerald-800 rounded-xl my-1.5">
+              <span>✅ Thông báo đẩy trình duyệt: <strong>Đang hoạt động</strong></span>
+            </div>
+          )}
 
           {/* List */}
           <div className="max-h-80 overflow-y-auto divide-y divide-gray-50 py-1">

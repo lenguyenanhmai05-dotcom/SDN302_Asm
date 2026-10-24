@@ -93,17 +93,26 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { content } = body;
+    const { content, fileUrl, fileName, fileType, fileSize } = body;
 
-    if (!content || typeof content !== "string" || content.trim() === "") {
-      return NextResponse.json({ error: "Message content cannot be empty" }, { status: 400 });
+    const trimmedContent = typeof content === "string" ? content.trim() : "";
+
+    if (!trimmedContent && !fileUrl) {
+      return NextResponse.json(
+        { error: "Message must contain text content or an attachment" },
+        { status: 400 }
+      );
     }
 
     const message = await prisma.chatMessage.create({
       data: {
         teamId,
         senderId: authUser.userId,
-        content: content.trim(),
+        content: trimmedContent || (fileName ? `[Tệp đính kèm: ${fileName}]` : "[Tệp đính kèm]"),
+        fileUrl: typeof fileUrl === "string" ? fileUrl : null,
+        fileName: typeof fileName === "string" ? fileName : null,
+        fileType: typeof fileType === "string" ? fileType : null,
+        fileSize: typeof fileSize === "number" ? fileSize : null,
       },
       include: {
         sender: {
