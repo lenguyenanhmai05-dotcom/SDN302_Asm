@@ -47,6 +47,7 @@ export default function TeamChat({
     type: string;
     size: number;
   } | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -349,18 +350,22 @@ export default function TeamChat({
                   {m.fileUrl && (
                     <div className="mt-2">
                       {m.fileType?.startsWith("image/") ? (
-                        <a
-                          href={m.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block overflow-hidden rounded-xl border border-black/10 hover:opacity-95 transition-opacity"
+                        <div
+                          onClick={() => setPreviewImage({ url: m.fileUrl!, name: m.fileName || "Ảnh đính kèm" })}
+                          title="Click để phóng to ảnh"
+                          className="group/img relative block cursor-zoom-in overflow-hidden rounded-xl border border-black/10 hover:opacity-95 transition-opacity"
                         >
                           <img
                             src={m.fileUrl}
                             alt={m.fileName || "Ảnh đính kèm"}
                             className="max-h-52 max-w-full rounded-xl object-contain bg-black/5"
                           />
-                        </a>
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                            <span className="rounded-lg bg-black/60 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-xs">
+                              🔍 Bấm để phóng to
+                            </span>
+                          </div>
+                        </div>
                       ) : (
                         <a
                           href={m.fileUrl}
@@ -478,6 +483,53 @@ export default function TeamChat({
           </button>
         </div>
       </form>
+
+      {/* Fullscreen Image Preview Lightbox */}
+      {previewImage && (
+        <div
+          onClick={() => setPreviewImage(null)}
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150"
+        >
+          {/* Top Bar */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="flex w-full max-w-4xl items-center justify-between pb-3 text-white"
+          >
+            <div className="flex items-center gap-2 truncate">
+              <span className="text-base">🖼️</span>
+              <span className="text-xs sm:text-sm font-semibold truncate">{previewImage.name}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <a
+                href={previewImage.url}
+                download={previewImage.name}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/30 transition-colors"
+              >
+                <span>⬇️</span>
+                <span>Tải ảnh về</span>
+              </a>
+              <button
+                onClick={() => setPreviewImage(null)}
+                className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20 text-white hover:bg-white/30 transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* Image Container */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative flex max-h-[85vh] max-w-4xl items-center justify-center overflow-hidden rounded-2xl bg-black/40 p-2 shadow-2xl"
+          >
+            <img
+              src={previewImage.url}
+              alt={previewImage.name}
+              className="max-h-[80vh] max-w-full object-contain rounded-xl shadow-lg"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
